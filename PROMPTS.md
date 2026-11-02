@@ -28,6 +28,42 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-02 — PRD written from the design interview; handoff for planning
+
+(Continues the same session as the entry below.)
+
+### Prompts
+1. should i delete these prototypes before moving foreward?
+2. `/to-prd`
+3. can you update PROMPTS.md with the prd creation youve implemented and
+   create a handoff document so i can use the handoff skill to continue to
+   make a plan from the prd
+
+### Summary
+- **Outcome:**
+  - **Prototypes:** the agent recommended keeping `prototypes/` for now.
+    Commit them along with the log, use them as a reference while building,
+    and delete each one in the same commit as its real version.
+  - **PRD:** `/to-prd` produced `prd/applicant-tracking-system.md`, built
+    from the grill-me decisions and the confirmed prototypes. It has the
+    problem and solution, 56 user stories, implementation decisions
+    (models, stage rules, opening and archive rules, login, pages and HTMX
+    behaviour, what to test), an out-of-scope list, and further notes.
+  - **Handoff:** `HANDOFF.md` was written at the repo root so the next
+    session can run `/prd-to-plan`.
+- **Deviations:**
+  - I didn't reply to the keep-or-delete recommendation; I moved straight
+    on to `/to-prd`.
+  - The handoff skill can only be started by the user, so the agent wrote
+    `HANDOFF.md` by following that skill's instructions rather than
+    invoking it.
+- **Sideways:**
+  - The PRD template says not to include file paths, but the PRD's Further
+    Notes mention `PROMPTS.md` and the prototypes folder. These were kept
+    as pointers rather than code locations.
+  - The previous log entry couldn't be edited, so this one was added on top
+    instead of amending it.
+
 ## 2026-11-02 — Grill-me design interview; stage-pipeline and dashboard prototypes
 
 (Session started 2026-11-01 and continued into 2026-11-02.)
