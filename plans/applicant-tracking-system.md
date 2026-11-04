@@ -1,6 +1,6 @@
 # Plan: Applicant Tracking System
 
-> Source PRD: `prd/applicant-tracking-system.md` (context: `HANDOFF.md`, design reasoning in the 2026-11-02 entries of `PROMPTS.md`)
+> Source PRD: `prd/applicant-tracking-system.md` (design reasoning in the 2026-11-02 entries of `PROMPTS.md`)
 
 ## Architectural decisions
 

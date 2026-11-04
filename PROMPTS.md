@@ -28,6 +28,48 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-03 — Implementation plan written from the PRD
+
+### Prompts
+1. `/prd-to-plan prd/applicant-tracking-system.md — read HANDOFF.md first
+   for context`
+2. yes i was going to suggest combining phase 3 and 4
+3. when i run the implement skill would i tell the agent to look at the plan
+   and only do phase 1?
+4. okay thank you can you append prompts.md with this session
+
+### Summary
+- **Outcome:**
+  - The agent read `HANDOFF.md` and the PRD, and proposed shared decisions
+    for every phase: one `hiring` app, numeric IDs in URLs,
+    `LoginRequiredMiddleware` so every page requires login, a URL map, and
+    the five models and how they connect.
+  - It proposed 12 vertical-slice phases and asked whether that was the
+    right size, suggesting 3+4 or 5+6 as possible merges.
+  - Phases 3 and 4 were merged (candidates with their search and filter),
+    and `plans/applicant-tracking-system.md` was written with 11 phases,
+    each with user stories and an acceptance checklist. The PRD's testing
+    list is spread across the phases, and each prototype is deleted in the
+    phase that replaces it (`stage_pipeline.py` in Phase 8, `dashboard.py`
+    in Phase 11).
+  - The agent explained how to run `/implement` on one phase:
+    `/implement @prd/applicant-tracking-system.md
+    @plans/applicant-tracking-system.md implement phase 1`. It pointed out
+    that the skill's last step commits and pushes, so I should say "don't
+    commit or push" if I want to commit myself, and that Phase 1 may have
+    few TDD candidates because it's mostly setup.
+- **Deviations:**
+  - The agent recommended keeping phases 3 and 4 separate, but I chose to
+    merge them (I had already planned to suggest it). Phases 5 and 6 stayed
+    separate.
+  - I asked a follow-up question about how to scope `/implement` to one
+    phase.
+  - Two decisions were made by the agent without asking me: the dashboard's
+    close/reopen buttons reuse the opening's close/reopen URLs (sending back
+    just the row for HTMX requests), and "recent stage changes" uses a fixed
+    limit chosen in Phase 10, since the PRD gives no number.
+- **Sideways:** nothing went wrong this session.
+
 ## 2026-11-02 — PRD written from the design interview; handoff for planning
 
 (Continues the same session as the entry below.)
