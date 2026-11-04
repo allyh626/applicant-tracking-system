@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+  <div class="flex justify-center pt-12">
+    <div class="card bg-base-100 shadow w-full max-w-sm">
+      <div class="card-body">
+        <h1 class="card-title text-2xl">Log in</h1>
+        <p class="text-sm opacity-70">Staff accounts are created by an administrator.</p>
+
+        {% if form.non_field_errors %}
+          <div role="alert" class="alert alert-error text-sm">
+            {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}" class="space-y-3">
+          {% csrf_token %}
+          <fieldset class="fieldset">
+            <label class="fieldset-legend" for="{{ form.username.id_for_label }}">Username</label>
+            <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
+                   value="{{ form.username.value|default:'' }}" class="input w-full"
+                   autocomplete="username" autofocus required>
+          </fieldset>
+          <fieldset class="fieldset">
+            <label class="fieldset-legend" for="{{ form.password.id_for_label }}">Password</label>
+            <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}"
+                   class="input w-full" autocomplete="current-password" required>
+          </fieldset>
+          {# Sends the user back to the page they first asked for. #}
+          <input type="hidden" name="next" value="{{ next }}">
+          <button type="submit" class="btn btn-primary w-full">Log in</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

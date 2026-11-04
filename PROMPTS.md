@@ -28,6 +28,64 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-04 — Phase 1 built: project skeleton and login gate
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 1`
+2. so a user will have to sign in on every page they visit?
+3. okay yes those two behaviors are good
+4. yes that looks right
+5. yes i think it has been implemented, you can move onto behavior 2
+6. yes it's implemented, go ahead and finish the phase
+7. when i do #7 i did not get a 405 page
+8. okay yes i see it returns a 405 error, can you update prompts.md then
+   commit and push this phase to github?
+
+### Summary
+- **Outcome:**
+  - Phase 1 is built. A uv project with Django 6.1.3 and the `hiring` app,
+    django-tailwind-cli with DaisyUI (corporate theme, Tailwind CLI version
+    pinned), HTMX 2.0.11 saved in `assets/js/`, Ruff, and pytest-django.
+  - `LoginRequiredMiddleware` makes every page require login. Login and
+    logout use Django's views under `/accounts/`, and logout is POST only.
+  - Added a base layout (navbar, username, Log out button), a DaisyUI login
+    page and a placeholder dashboard at `/`.
+  - Tests: a shared `staff_client` fixture and 9 tests in
+    `tests/test_auth.py`. The two TDD behaviors were "anonymous request to
+    `/` redirects to login with `?next=/`" and "logout POST ends the session
+    and returns to login". Other tests cover login returning you to the page
+    you asked for, a wrong password, logout refusing GET, and an account
+    created in the admin being able to log in.
+  - Ruff check and format pass, and the README has setup and run steps.
+- **Deviations:**
+  - I asked whether users would have to sign in on every page. The agent
+    explained that you sign in once, and the session cookie keeps you signed
+    in (Django's default is 2 weeks) until you log out.
+  - The implement skill says the agent writes PROMPTS.md, commits and
+    pushes. The agent left those for me, following CLAUDE.md, until I asked
+    in prompt 8.
+- **Sideways:**
+  - `uv init` found the `pyproject.toml` in the parent `CIDM3312` folder and
+    added this project to that shared workspace, so the lock file and `.venv`
+    landed outside the repo. The agent removed it from the parent's member
+    list, re-ran `uv lock` there (it only removed the added packages), and
+    recreated the project with `--no-workspace`.
+  - The logout test passed the first time it ran, so it never went RED,
+    because the setup work had already wired in the logout redirect. The
+    agent removed `LOGOUT_REDIRECT_URL` for one run to show the test fails
+    without it, then put it back.
+  - PowerShell added a BOM to `settings.py` while doing that, and the agent
+    removed it.
+  - The first `ruff format` also reformatted the two prototypes. The agent
+    restored them with git and excluded `prototypes/` from Ruff.
+  - The agent dropped a "no sign-up page" test because it would pass no
+    matter what (Django returns 404 for unknown URLs).
+  - Manual step 7 (visit `/accounts/logout/` to see a 405) was written
+    wrong. Step 6 had already logged me out, so the login gate redirected
+    me to login instead. Django's 405 page is also blank. The corrected step
+    is to log in first and check the status in the browser's Network tab.
+
 ## 2026-11-03 — Implementation plan written from the PRD
 
 ### Prompts

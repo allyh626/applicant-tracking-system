@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Built Tailwind stylesheet (rebuilt by django-tailwind-cli)
+assets/css/tailwind.css

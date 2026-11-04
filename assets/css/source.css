@@ -1,0 +1,8 @@
+/* Tailwind source stylesheet. django-tailwind-cli builds it into
+   assets/css/tailwind.css (that built file is not committed). */
+@import "tailwindcss";
+
+/* "corporate" matches the look of the prototypes. */
+@plugin "daisyui" {
+  themes: corporate --default;
+}
