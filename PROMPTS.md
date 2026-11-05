@@ -28,6 +28,51 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-04 — Phase 2 built: skills page
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 2`
+2. yes those are good behaviors for tdd
+3. yes go ahead
+4. yes i feel this implements the behavior, you can move on
+5. yes go ahead
+6. yes you can move onto the third behavior
+7. yes go ahead
+8. i feel it does both, you can complete the rest of the phase
+9. okay i testd in the browser, you can update prompts.md and commit and
+   push.
+
+### Summary
+- **Outcome:**
+  - Phase 2 is built. Added the `Skill` model with a case-insensitive
+    unique constraint on `Lower("name")`, names trimmed in `save()`, and
+    alphabetical ordering that ignores capitalisation.
+  - Added the `/skills/` page (list plus add form, redirect after a
+    successful add), a Skills navbar link, and Skill in the admin.
+  - The three TDD behaviors were: the database refuses "python" when
+    "Python" exists, the skills form refuses "python" and " Python " with a
+    form error instead of crashing, and spaces around a name are removed on
+    save. Regular tests cover adding and listing, alphabetical order, blank
+    names, the login requirement and adding a skill in the admin
+    (18 tests in total).
+  - Ruff check and format pass. The user checked the page in the browser.
+- **Deviations:**
+  - No recommendations were overridden and no follow-up questions were
+    asked. The user approved each TDD step as proposed.
+  - The agent turned off Ruff's RUF012 rule in `pyproject.toml` without
+    asking, because it flags normal Django class attributes like
+    `fields = [...]`.
+- **Sideways:**
+  - The alphabetical-order test failed at first: SQLite sorted "django"
+    after "SQL". Fixed by ordering on the lowercased name.
+  - The implement skill says to log, commit and push at the end, but
+    CLAUDE.md says the user commits and asks for the log. The agent waited
+    until the user asked.
+  - The code review was done by the agent reading the changes itself, not
+    with the separate code-review tool. It found no bugs and noted one
+    small limit (names aren't trimmed during `full_clean()` before saving).
+
 ## 2026-11-04 — Phase 1 built: project skeleton and login gate
 
 ### Prompts

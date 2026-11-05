@@ -25,3 +25,5 @@ extend-exclude = ["*/migrations/*", "prototypes"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "DJ", "RUF"]
+# RUF012 flags Django's normal class attributes (Meta.fields, ordering, list_display...).
+ignore = ["RUF012"]

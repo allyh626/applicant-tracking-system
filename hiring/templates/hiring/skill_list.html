@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Skills{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">Skills</h1>
+
+  <div class="grid gap-6 md:grid-cols-3">
+    <div class="card bg-base-100 shadow md:col-span-1 h-fit">
+      <div class="card-body">
+        <h2 class="card-title">Add a skill</h2>
+        <form method="post" action="{% url 'hiring:skill_list' %}" class="space-y-3" novalidate>
+          {% csrf_token %}
+          <fieldset class="fieldset">
+            <label class="fieldset-legend" for="{{ form.name.id_for_label }}">Name</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}
+              <p class="text-error text-sm">{{ error }}</p>
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <p class="text-error text-sm">{{ error }}</p>
+            {% endfor %}
+          </fieldset>
+          <button type="submit" class="btn btn-primary w-full">Add skill</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow md:col-span-2">
+      <div class="card-body">
+        <h2 class="card-title">All skills <span class="badge badge-neutral">{{ skills|length }}</span></h2>
+        {% if skills %}
+          <ul class="flex flex-wrap gap-2">
+            {% for skill in skills %}
+              <li class="badge badge-outline badge-lg">{{ skill.name }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="opacity-70">No skills yet. Add the first one with the form.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

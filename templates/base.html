@@ -17,6 +17,8 @@
       <ul class="menu menu-horizontal gap-1">
         {% url 'hiring:dashboard' as dashboard_url %}
         <li><a href="{{ dashboard_url }}" {% if request.path == dashboard_url %}class="menu-active"{% endif %}>Dashboard</a></li>
+        {% url 'hiring:skill_list' as skills_url %}
+        <li><a href="{{ skills_url }}" {% if request.path == skills_url %}class="menu-active"{% endif %}>Skills</a></li>
       </ul>
       <div class="ml-4 flex items-center gap-3 text-sm">
         <span class="opacity-70">{{ user.get_username }}</span>
