@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{{ candidate.full_name }}{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <a href="{% url 'hiring:candidate_list' %}" class="link link-hover text-sm opacity-70">&larr; Candidates</a>
+      <h1 class="text-2xl font-bold">{{ candidate.full_name }}</h1>
+    </div>
+    <a href="{% url 'hiring:candidate_edit' candidate.pk %}" class="btn">Edit</a>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-3">
+    <div class="card bg-base-100 shadow md:col-span-2">
+      <div class="card-body">
+        <h2 class="card-title">Details</h2>
+        <dl class="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2">
+          <dt class="opacity-70">Email</dt><dd>{{ candidate.email }}</dd>
+          <dt class="opacity-70">Phone</dt><dd>{{ candidate.phone|default:"—" }}</dd>
+          <dt class="opacity-70">Source</dt><dd><span class="badge badge-outline">{{ candidate.get_source_display }}</span></dd>
+          <dt class="opacity-70">Source details</dt><dd>{{ candidate.source_details|default:"—" }}</dd>
+          <dt class="opacity-70">Profile/resume</dt>
+          <dd>{% if candidate.profile_url %}<a class="link" href="{{ candidate.profile_url }}" target="_blank" rel="noopener noreferrer">{{ candidate.profile_url }}</a>{% else %}—{% endif %}</dd>
+        </dl>
+        <h3 class="font-semibold mt-4">Notes</h3>
+        <p class="whitespace-pre-line">{{ candidate.notes|default:"No notes." }}</p>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow h-fit">
+      <div class="card-body">
+        <h2 class="card-title">Applications</h2>
+        {# Filled in by Phase 6, when applications exist. #}
+        <p class="opacity-70">No applications yet.</p>
+        <p class="text-xs opacity-60 mt-2">Added {{ candidate.created_at|date:"M j, Y" }} &middot; updated {{ candidate.updated_at|timesince }} ago</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

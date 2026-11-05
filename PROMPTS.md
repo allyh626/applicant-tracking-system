@@ -28,6 +28,72 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-05 — Phase 3 built: candidates
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 3`
+2. yes those are good
+3. yes
+4. yes it implements the behavior, you can move on
+5. yes that looks right, go ahead
+6. yes it implements the behavior, finish the rest of the phase
+7. (Answer to the agent's question on email capitalisation) Ignore case,
+   keep typing (Recommended)
+8. when i try to search ana lopez with the updated name containing the
+   special character: ó if i do not include the special character and just
+   put a regular o the ana lopez candidate is not searched up
+9. (Answer to the agent's question on accents in search) Search-text column
+   (Recommended)
+10. okay i tested in the browser, update prompts.md
+
+### Summary
+- **Outcome:**
+  - Phase 3 is built. Added the `Candidate` model with the four fixed
+    sources, an email that is unique regardless of capitalisation (a
+    database constraint on the lowercased email, the same pattern as
+    Skill) but stored as typed, and names and email trimmed in `save()`.
+  - Added the candidate list (search and source filter as GET parameters),
+    create, detail and edit pages, a Candidates navbar link, and Candidate
+    in the admin, which is the only place a candidate can be deleted.
+  - Search matches every typed word against the name and email, ignoring
+    capitals and accents. This uses a hidden `search_text` field that
+    `save()` fills with the folded name and email (`hiring/search.py`).
+  - The two TDD behaviors were: `?q=` matches first name, last name or
+    email ignoring capitalisation, and `?source=` limits the list and
+    combines with `?q=`. Regular tests cover create, edit, detail, the
+    duplicate-email error, the admin delete, no delete action in the app,
+    and the login requirement (56 tests in total).
+  - Ruff check and format pass. The user checked the pages in the browser.
+- **Deviations:**
+  - No recommendations were overridden. The user picked the recommended
+    option for both questions the agent asked (email capitalisation and
+    accents in search).
+  - The user found the accent problem while testing in the browser and
+    asked about it. That led to the `search_text` field.
+  - The agent made the source filter ignore unknown values, which goes a
+    little past the approved TDD test, and said so at the time.
+- **Sideways:**
+  - The code-review tool found nine issues. Seven were fixed with tests:
+    email duplicates that differ only in capitals, full-name search ("Ana
+    Lopez") finding nothing, the edit heading showing an unsaved name after
+    a failed edit, an unknown source looking like an active filter, a
+    length-based navbar check, trimming only in the form, and a "no delete"
+    test that missed two pages. Two style suggestions were left as they
+    were (merging the create and edit views, and moving the form layout
+    out of the template).
+  - Accents weren't handled at first: SQLite treats "o" and "ó" as
+    different letters. The user caught it in the browser.
+  - `0002_candidate.py` was regenerated once for the email constraint
+    (before it had been applied). By the time of the accent fix, the
+    migration had already been applied to the user's database, so the fix
+    went into a new `0003` migration that also fills in existing rows.
+  - A smoke-test script hung because of a stray `cat >` waiting for input,
+    and was stopped. One navbar edit was a no-op and had to be redone. A
+    `manage.py shell` check failed on piped input and was rerun with `-c`.
+  - The implement skill says to log, commit and push, but CLAUDE.md says
+    the user commits. The agent waited to be asked and did not commit.
+
 ## 2026-11-04 — Phase 2 built: skills page
 
 ### Prompts
