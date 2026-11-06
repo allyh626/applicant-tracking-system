@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{% if opening %}Edit {{ saved_title }}{% else %}New job opening{% endif %}{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">
+    {% if opening %}Edit {{ saved_title }}{% else %}New job opening{% endif %}
+  </h1>
+
+  <div class="card bg-base-100 shadow max-w-2xl">
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          <div role="alert" class="alert alert-error mb-3">{{ error }}</div>
+        {% endfor %}
+        <div class="grid gap-x-4 md:grid-cols-2">
+          {% for field in form %}
+            <fieldset class="fieldset {% if field.name == 'title' or field.name == 'description' or field.name == 'required_skills' %}md:col-span-2{% endif %}">
+              <label class="fieldset-legend" for="{{ field.id_for_label }}">
+                {{ field.label }}{% if not field.field.required %} <span class="font-normal opacity-60">(optional)</span>{% endif %}
+              </label>
+              {% if field.name == 'required_skills' and not field.field.queryset.exists %}
+                <p class="opacity-70">No skills yet. <a class="link" href="{% url 'hiring:skill_list' %}">Add skills</a> first, then come back.</p>
+              {% else %}
+                {{ field }}
+                {% if field.help_text %}<p class="label whitespace-normal">{{ field.help_text }}</p>{% endif %}
+              {% endif %}
+              {% for error in field.errors %}
+                <p class="text-error text-sm">{{ error }}</p>
+              {% endfor %}
+            </fieldset>
+          {% endfor %}
+        </div>
+        <div class="mt-4 flex gap-2">
+          <button type="submit" class="btn btn-primary">{% if opening %}Save changes{% else %}Create opening{% endif %}</button>
+          <a href="{% if opening %}{% url 'hiring:opening_detail' opening.pk %}{% else %}{% url 'hiring:opening_list' %}{% endif %}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

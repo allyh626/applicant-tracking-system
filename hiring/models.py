@@ -95,3 +95,31 @@ class Candidate(models.Model):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class JobOpening(models.Model):
+    """A role the company is hiring for. Applications are attached to an opening."""
+
+    title = models.CharField(max_length=200)
+    # Free text on purpose: there is no Department model (out of scope).
+    department = models.CharField(max_length=100)
+    location = models.CharField(max_length=100)
+    description = models.TextField()
+    # New openings start open. Close and reopen are built in Phase 5. There is
+    # no Draft status and no closed-at timestamp (PRD decisions).
+    is_open = models.BooleanField("open", default=True)
+    required_skills = models.ManyToManyField(Skill, blank=True, related_name="openings")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = [Lower("title"), "pk"]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        self.title = self.title.strip()
+        self.department = self.department.strip()
+        self.location = self.location.strip()
+        super().save(*args, **kwargs)

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import DUPLICATE_EMAIL_MESSAGE, Candidate, Skill
+from .models import DUPLICATE_EMAIL_MESSAGE, Candidate, JobOpening, Skill
 
 
 class SkillForm(forms.ModelForm):
@@ -46,3 +46,22 @@ class CandidateForm(forms.ModelForm):
         if others.filter(email__iexact=email).exists():
             raise forms.ValidationError(DUPLICATE_EMAIL_MESSAGE)
         return email
+
+
+class JobOpeningForm(forms.ModelForm):
+    class Meta:
+        model = JobOpening
+        # is_open is left out: new openings start open, and Phase 5 adds the
+        # close and reopen buttons.
+        fields = ["title", "department", "location", "description", "required_skills"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "input w-full"}),
+            "department": forms.TextInput(attrs={"class": "input w-full"}),
+            "location": forms.TextInput(attrs={"class": "input w-full"}),
+            "description": forms.Textarea(attrs={"class": "textarea w-full", "rows": 6}),
+            "required_skills": forms.SelectMultiple(attrs={"class": "select w-full h-40"}),
+        }
+        help_texts = {
+            "required_skills": "Hold Ctrl (Cmd on a Mac) to choose more than one. "
+            "Add new skills on the Skills page.",
+        }

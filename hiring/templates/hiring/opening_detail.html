@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opening.title }}{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <a href="{% url 'hiring:opening_list' %}" class="link link-hover text-sm opacity-70">&larr; Job openings</a>
+      <h1 class="text-2xl font-bold">{{ opening.title }}</h1>
+    </div>
+    <a href="{% url 'hiring:opening_edit' opening.pk %}" class="btn">Edit</a>
+  </div>
+
+  <div class="card bg-base-100 shadow max-w-3xl">
+    <div class="card-body">
+      <dl class="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2">
+        <dt class="opacity-70">Department</dt><dd>{{ opening.department }}</dd>
+        <dt class="opacity-70">Location</dt><dd>{{ opening.location }}</dd>
+        <dt class="opacity-70">Status</dt>
+        <dd>{% if opening.is_open %}<span class="badge badge-success">Open</span>{% else %}<span class="badge badge-ghost">Closed</span>{% endif %}</dd>
+        <dt class="opacity-70">Required skills</dt>
+        <dd>
+          {% for skill in opening.required_skills.all %}
+            <span class="badge badge-outline">{{ skill.name }}</span>
+          {% empty %}
+            <span class="opacity-70">None listed</span>
+          {% endfor %}
+        </dd>
+      </dl>
+      <h2 class="font-semibold mt-4">Description</h2>
+      <p class="whitespace-pre-line">{{ opening.description }}</p>
+      <p class="text-xs opacity-60 mt-2">Created {{ opening.created_at|date:"M j, Y" }} &middot; updated {{ opening.updated_at|timesince }} ago</p>
+    </div>
+  </div>
+{% endblock %}

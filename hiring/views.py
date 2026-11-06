@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import CandidateForm, SkillForm
-from .models import Candidate, Skill
+from .forms import CandidateForm, JobOpeningForm, SkillForm
+from .models import Candidate, JobOpening, Skill
 from .search import fold
 
 
@@ -81,4 +81,42 @@ def candidate_edit(request, pk):
         request,
         "hiring/candidate_form.html",
         {"form": form, "candidate": candidate, "saved_name": saved_name},
+    )
+
+
+def opening_list(request):
+    # prefetch_related loads every opening's skills in one extra query, instead
+    # of one query per row.
+    openings = JobOpening.objects.prefetch_related("required_skills")
+    return render(request, "hiring/opening_list.html", {"openings": openings})
+
+
+def opening_create(request):
+    form = JobOpeningForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        # A ModelForm's save() also saves the many-to-many skills.
+        opening = form.save()
+        return redirect("hiring:opening_detail", pk=opening.pk)
+    return render(request, "hiring/opening_form.html", {"form": form})
+
+
+def opening_detail(request, pk):
+    opening = get_object_or_404(JobOpening, pk=pk)
+    return render(request, "hiring/opening_detail.html", {"opening": opening})
+
+
+def opening_edit(request, pk):
+    opening = get_object_or_404(JobOpening, pk=pk)
+    # Remember the saved title: is_valid() copies the submitted values onto
+    # `opening`, so after a failed edit the heading would show the unsaved one.
+    saved_title = opening.title
+    form = JobOpeningForm(request.POST or None, instance=opening)
+    if request.method == "POST" and form.is_valid():
+        # save() replaces the skill set with exactly the ones selected.
+        form.save()
+        return redirect("hiring:opening_detail", pk=opening.pk)
+    return render(
+        request,
+        "hiring/opening_form.html",
+        {"form": form, "opening": opening, "saved_title": saved_title},
     )

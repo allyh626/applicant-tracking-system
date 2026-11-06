@@ -19,6 +19,8 @@
         <li><a href="{{ dashboard_url }}" {% if request.path == dashboard_url %}class="menu-active"{% endif %}>Dashboard</a></li>
         {% url 'hiring:candidate_list' as candidates_url %}
         <li><a href="{{ candidates_url }}" {% if candidates_url in request.path %}class="menu-active"{% endif %}>Candidates</a></li>
+        {% url 'hiring:opening_list' as openings_url %}
+        <li><a href="{{ openings_url }}" {% if openings_url in request.path %}class="menu-active"{% endif %}>Openings</a></li>
         {% url 'hiring:skill_list' as skills_url %}
         <li><a href="{{ skills_url }}" {% if request.path == skills_url %}class="menu-active"{% endif %}>Skills</a></li>
       </ul>

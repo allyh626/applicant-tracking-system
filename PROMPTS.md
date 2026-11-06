@@ -28,6 +28,52 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-06 — Phase 4 built: job openings
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 4`
+2. yes these behaviors are good for tdd
+3. yes go ahead
+4. yes that looks good
+5. yes go ahead
+6. yes it implements the behavior, you can move on
+7. yes go ahead
+8. yes you can finish the rest of the phase
+9. okay i have checked this manually, could you update prompts and commit
+   and push the phase?
+
+### Summary
+- **Outcome:**
+  - Phase 4 is built. Added the `JobOpening` model (migration 0004): title,
+    department, location, description, an open/closed flag that starts
+    open, a many-to-many to `Skill` for required skills, and timestamps.
+    Title, department and location are trimmed in `save()`, like Candidate.
+  - Added the openings list, create, detail and edit pages, an Openings
+    navbar link, and JobOpening in the admin (with a searchable skill
+    picker). Required skills are chosen from a multi-select; when no skills
+    exist, the form links to the Skills page instead. The open/closed flag
+    is not on the form (close and reopen come in Phase 5).
+  - Three behaviors were built test-first: creating an opening with
+    several skills, editing that adds and removes skills, and the list and
+    detail pages showing each opening's own department, location and
+    skills. 19 more tests cover the rest of the phase (shared skills,
+    required fields, unknown skills, trimming, status unchanged by edits,
+    404s, admin, login). 79 tests pass; ruff is clean.
+- **Deviations:** none. The user approved every proposed behavior and test
+  as written, and verified the phase in the browser before asking for this
+  log, the commit and the push.
+- **Sideways:**
+  - The first RED for the create test failed with `DoesNotExist` instead
+    of an assertion. Added an explicit `count() == 1` assertion before
+    showing it, so it failed on an assertion as the TDD skill requires.
+  - The implement skill says to write the PROMPTS.md entry and commit at
+    the end, but this file and CLAUDE.md say entries are added only when
+    the user asks and the user commits. The agent waited, and the user
+    then asked for all three.
+  - The Tailwind classes for the multi-select live in `forms.py`, so the
+    agent rebuilt the CSS to confirm they were picked up (they were).
+
 ## 2026-11-05 — Phase 3 built: candidates
 
 ### Prompts

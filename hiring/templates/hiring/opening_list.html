@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Job openings{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">Job openings</h1>
+    <a href="{% url 'hiring:opening_create' %}" class="btn btn-primary">New opening</a>
+  </div>
+
+  <div class="card bg-base-100 shadow">
+    <div class="card-body">
+      {% if openings %}
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr><th>Title</th><th>Department</th><th>Location</th><th>Required skills</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for opening in openings %}
+                <tr>
+                  <td><a class="link link-hover font-medium" href="{% url 'hiring:opening_detail' opening.pk %}">{{ opening.title }}</a></td>
+                  <td>{{ opening.department }}</td>
+                  <td>{{ opening.location }}</td>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      {% for skill in opening.required_skills.all %}
+                        <span class="badge badge-outline badge-sm">{{ skill.name }}</span>
+                      {% empty %}
+                        <span class="opacity-60">—</span>
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td>{% if opening.is_open %}<span class="badge badge-success">Open</span>{% else %}<span class="badge badge-ghost">Closed</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="opacity-70">No job openings yet. Create the first one with the button above.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
