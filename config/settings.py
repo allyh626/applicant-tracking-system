@@ -51,6 +51,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Turns the blank 405 page (a GET to a POST-only URL) into a readable one.
+    "config.middleware.FriendlyMethodNotAllowedMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

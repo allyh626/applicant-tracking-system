@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import CandidateForm, JobOpeningForm, SkillForm
 from .models import Candidate, JobOpening, Skill
@@ -84,11 +85,24 @@ def candidate_edit(request, pk):
     )
 
 
+OPENING_STATUS_CHOICES = [("all", "All"), ("open", "Open"), ("closed", "Closed")]
+
+
 def opening_list(request):
+    """List openings, filtered by ?status=open|closed|all (default all)."""
+    status = request.GET.get("status", "all")
+    if status not in dict(OPENING_STATUS_CHOICES):
+        status = "all"  # an unknown value (old bookmark, typo) means "all"
     # prefetch_related loads every opening's skills in one extra query, instead
     # of one query per row.
     openings = JobOpening.objects.prefetch_related("required_skills")
-    return render(request, "hiring/opening_list.html", {"openings": openings})
+    if status != "all":
+        openings = openings.filter(is_open=(status == "open"))
+    return render(
+        request,
+        "hiring/opening_list.html",
+        {"openings": openings, "status": status, "status_choices": OPENING_STATUS_CHOICES},
+    )
 
 
 def opening_create(request):
@@ -103,6 +117,26 @@ def opening_create(request):
 def opening_detail(request, pk):
     opening = get_object_or_404(JobOpening, pk=pk)
     return render(request, "hiring/opening_detail.html", {"opening": opening})
+
+
+def _set_opening_status(request, pk, is_open):
+    """Flip only the open/closed flag. Applications under the opening are untouched."""
+    opening = get_object_or_404(JobOpening, pk=pk)
+    opening.is_open = is_open
+    # update_fields saves just this flag (and the updated time), nothing else.
+    opening.save(update_fields=["is_open", "updated_at"])
+    return redirect("hiring:opening_detail", pk=opening.pk)
+
+
+# POST only: a GET (a visited link, a browser prefetch) gets 405 and changes nothing.
+@require_POST
+def opening_close(request, pk):
+    return _set_opening_status(request, pk, is_open=False)
+
+
+@require_POST
+def opening_reopen(request, pk):
+    return _set_opening_status(request, pk, is_open=True)
 
 
 def opening_edit(request, pk):

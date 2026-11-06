@@ -51,8 +51,8 @@ class CandidateForm(forms.ModelForm):
 class JobOpeningForm(forms.ModelForm):
     class Meta:
         model = JobOpening
-        # is_open is left out: new openings start open, and Phase 5 adds the
-        # close and reopen buttons.
+        # is_open is left out: new openings start open, and the detail page's
+        # Close and Reopen buttons change it.
         fields = ["title", "department", "location", "description", "required_skills"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "input w-full"}),

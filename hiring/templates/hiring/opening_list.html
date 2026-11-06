@@ -8,6 +8,21 @@
     <a href="{% url 'hiring:opening_create' %}" class="btn btn-primary">New opening</a>
   </div>
 
+  {# A plain GET form: the filter lives in the URL, so a filtered view can be bookmarked. #}
+  <form method="get" action="{% url 'hiring:opening_list' %}" class="card bg-base-100 shadow mb-6">
+    <div class="card-body flex-row flex-wrap items-end gap-3">
+      <fieldset class="fieldset">
+        <label class="fieldset-legend" for="status">Status</label>
+        <select id="status" name="status" class="select">
+          {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </fieldset>
+      <button type="submit" class="btn">Filter</button>
+    </div>
+  </form>
+
   <div class="card bg-base-100 shadow">
     <div class="card-body">
       {% if openings %}
@@ -37,6 +52,8 @@
             </tbody>
           </table>
         </div>
+      {% elif status != "all" %}
+        <p class="opacity-70">No {{ status }} job openings. <a class="link" href="{% url 'hiring:opening_list' %}">Show all</a></p>
       {% else %}
         <p class="opacity-70">No job openings yet. Create the first one with the button above.</p>
       {% endif %}

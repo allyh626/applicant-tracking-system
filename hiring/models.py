@@ -105,7 +105,7 @@ class JobOpening(models.Model):
     department = models.CharField(max_length=100)
     location = models.CharField(max_length=100)
     description = models.TextField()
-    # New openings start open. Close and reopen are built in Phase 5. There is
+    # New openings start open. Close and reopen only flip this flag. There is
     # no Draft status and no closed-at timestamp (PRD decisions).
     is_open = models.BooleanField("open", default=True)
     required_skills = models.ManyToManyField(Skill, blank=True, related_name="openings")

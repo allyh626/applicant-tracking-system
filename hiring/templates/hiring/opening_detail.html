@@ -8,8 +8,42 @@
       <a href="{% url 'hiring:opening_list' %}" class="link link-hover text-sm opacity-70">&larr; Job openings</a>
       <h1 class="text-2xl font-bold">{{ opening.title }}</h1>
     </div>
-    <a href="{% url 'hiring:opening_edit' opening.pk %}" class="btn">Edit</a>
+    <div class="flex gap-2">
+      <a href="{% url 'hiring:opening_edit' opening.pk %}" class="btn">Edit</a>
+      {% if opening.is_open %}
+        {# Closing asks first: the button opens the dialog below, which holds the real POST form. #}
+        <button type="button" class="btn btn-warning" onclick="close_dialog.showModal()">Close opening</button>
+      {% else %}
+        {# Reopening needs no confirmation (a PRD decision). #}
+        <form method="post" action="{% url 'hiring:opening_reopen' opening.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">Reopen opening</button>
+        </form>
+      {% endif %}
+    </div>
   </div>
+
+  {% if opening.is_open %}
+    <dialog id="close_dialog" class="modal">
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">Close {{ opening.title }}?</h3>
+        <p class="py-4">
+          It will stop accepting new applications.
+          Existing applications will continue as normal: they keep their stage and can still be moved.
+          You can reopen it at any time.
+        </p>
+        <div class="modal-action">
+          <form method="dialog"><button class="btn">Cancel</button></form>
+          <form method="post" action="{% url 'hiring:opening_close' opening.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning">Close opening</button>
+          </form>
+        </div>
+      </div>
+      {# Clicking outside the box also cancels. #}
+      <form method="dialog" class="modal-backdrop"><button>cancel</button></form>
+    </dialog>
+  {% endif %}
 
   <div class="card bg-base-100 shadow max-w-3xl">
     <div class="card-body">

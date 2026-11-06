@@ -28,6 +28,68 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-06 — Phase 5 built: close and reopen openings, and the openings filter
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 5`
+2. (Answer to the agent's question on the openings list default) All
+   (Recommended)
+3. yes those are good tdd behaviors
+4. yes thats good
+5. yes you can move to the next
+6. yes go ahead
+7. yes you can do behavior three now
+8. yes go ahead
+9. yes you can finish the rest of the phase
+10. ive checked in the browser and everything does as it should. When the
+    405 "Method Not Allowed" page is loaded there is jsut a blank screen, I
+    would like for htis to be more user friendly. I believe I had an issue
+    with this in a previous step but did not implement changes towards a
+    solution.
+11. (Answer to the agent's question on the 405 page) Friendly 405 page
+    (Recommended)
+12. okay looks good, can you update prompts.md and commit and push this
+    phase?
+
+### Summary
+- **Outcome:**
+  - Phase 5 is built. Added POST-only `/openings/<pk>/close/` and
+    `/openings/<pk>/reopen/` URLs that only flip the open/closed flag and
+    redirect to the detail page. No migration was needed.
+  - The opening detail page shows Close (which opens a DaisyUI confirmation
+    dialog saying existing applications will continue as normal) or Reopen
+    (no confirmation). The openings list has a Status filter
+    (`?status=open|closed|all`) that defaults to All; an unknown value also
+    means All, like the candidate source filter.
+  - Three behaviors were built test-first: close and reopen flip the flag,
+    a GET to either is refused with 405 and changes nothing, and the status
+    filter. 15 more tests cover the confirmation text, which button shows,
+    status badges, the filter form, the empty-filter message, 404s and
+    login.
+  - Added a project-wide middleware (`config/middleware.py`) and
+    `templates/405.html` so a GET to any POST-only URL (close/reopen,
+    logout, and later phases' actions) shows a styled page instead of a
+    blank one. It keeps the 405 status and skips HTMX requests. 4 tests.
+  - 104 tests pass; ruff check and format are clean.
+- **Deviations:**
+  - Asked whether the openings list should default to All or Open (the PRD
+    only fixes the dashboard's default); the user chose All.
+  - After checking in the browser, the user asked for a friendlier 405
+    page, which was not in the plan. They had hit the same blank page with
+    logout in Phase 1 but hadn't fixed it then. They chose the
+    recommended project-wide middleware over redirecting back per view.
+- **Sideways:**
+  - The agent's first 405 test assumed a logged-out visitor opening
+    `/accounts/logout/` would see the 405 page. It failed: the login gate
+    redirects them to login first (matching the Phase 1 note). The test
+    was changed to check that redirect instead.
+  - Ruff flagged two `[...][0]` list lookups in the new tests (RUF015);
+    they were changed to `next(...)`.
+  - `manage.py check` shows the existing `django_tailwind_cli.W001`
+    warning about the source CSS inside `assets/`. It predates this phase
+    and was left alone.
+
 ## 2026-11-06 — Phase 4 built: job openings
 
 ### Prompts
