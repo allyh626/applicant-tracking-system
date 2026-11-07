@@ -8,7 +8,10 @@
       <a href="{% url 'hiring:candidate_list' %}" class="link link-hover text-sm opacity-70">&larr; Candidates</a>
       <h1 class="text-2xl font-bold">{{ candidate.full_name }}</h1>
     </div>
-    <a href="{% url 'hiring:candidate_edit' candidate.pk %}" class="btn">Edit</a>
+    <div class="flex gap-2">
+      <a href="{% url 'hiring:application_create' %}?candidate={{ candidate.pk }}" class="btn btn-primary">Add application</a>
+      <a href="{% url 'hiring:candidate_edit' candidate.pk %}" class="btn">Edit</a>
+    </div>
   </div>
 
   <div class="grid gap-6 md:grid-cols-3">
@@ -31,8 +34,21 @@
     <div class="card bg-base-100 shadow h-fit">
       <div class="card-body">
         <h2 class="card-title">Applications</h2>
-        {# Filled in by Phase 6, when applications exist. #}
-        <p class="opacity-70">No applications yet.</p>
+        {% if applications %}
+          <ul class="divide-y divide-base-200">
+            {% for application in applications %}
+              <li class="py-2 flex items-center justify-between gap-2">
+                <div>
+                  <a class="link link-hover font-medium" href="{% url 'hiring:opening_detail' application.opening.pk %}">{{ application.opening.title }}</a>
+                  <p class="text-xs opacity-60">Created {{ application.created_at|date:"M j, Y" }}</p>
+                </div>
+                <span class="badge badge-soft badge-primary whitespace-nowrap">{{ application.get_stage_display }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="opacity-70">No applications yet.</p>
+        {% endif %}
         <p class="text-xs opacity-60 mt-2">Added {{ candidate.created_at|date:"M j, Y" }} &middot; updated {{ candidate.updated_at|timesince }} ago</p>
       </div>
     </div>

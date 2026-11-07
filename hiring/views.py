@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import CandidateForm, JobOpeningForm, SkillForm
+from .forms import ApplicationForm, CandidateForm, JobOpeningForm, SkillForm
 from .models import Candidate, JobOpening, Skill
 from .search import fold
 
@@ -66,7 +66,13 @@ def candidate_create(request):
 
 def candidate_detail(request, pk):
     candidate = get_object_or_404(Candidate, pk=pk)
-    return render(request, "hiring/candidate_detail.html", {"candidate": candidate})
+    # select_related loads each application's opening in the same query.
+    applications = candidate.applications.select_related("opening")
+    return render(
+        request,
+        "hiring/candidate_detail.html",
+        {"candidate": candidate, "applications": applications},
+    )
 
 
 def candidate_edit(request, pk):
@@ -137,6 +143,24 @@ def opening_close(request, pk):
 @require_POST
 def opening_reopen(request, pk):
     return _set_opening_status(request, pk, is_open=True)
+
+
+def application_create(request):
+    # ?candidate=<pk> and ?opening=<pk> pre-select a choice, so the "Add
+    # application" buttons on candidate and opening pages fill one in. Anything
+    # that isn't a number is ignored.
+    initial = {
+        name: int(request.GET[name])
+        for name in ("candidate", "opening")
+        # isdecimal, not isdigit: "²" is a digit but int() can't read it.
+        if request.GET.get(name, "").isdecimal()
+    }
+    form = ApplicationForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        application = form.save()
+        # Back to the candidate, whose page lists their applications.
+        return redirect("hiring:candidate_detail", pk=application.candidate_id)
+    return render(request, "hiring/application_form.html", {"form": form})
 
 
 def opening_edit(request, pk):

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import DUPLICATE_EMAIL_MESSAGE, Candidate, JobOpening, Skill
+from .models import DUPLICATE_EMAIL_MESSAGE, Application, Candidate, JobOpening, Skill
 
 
 class SkillForm(forms.ModelForm):
@@ -65,3 +65,30 @@ class JobOpeningForm(forms.ModelForm):
             "required_skills": "Hold Ctrl (Cmd on a Mac) to choose more than one. "
             "Add new skills on the Skills page.",
         }
+
+
+class ApplicationForm(forms.ModelForm):
+    class Meta:
+        model = Application
+        # stage is left out: every new application starts at Applied.
+        fields = ["candidate", "opening"]
+        widgets = {
+            "candidate": forms.Select(attrs={"class": "select w-full"}),
+            "opening": forms.Select(attrs={"class": "select w-full"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Show enough in each choice to tell two "Ana Lopez"es or two
+        # "Data Analyst" openings apart.
+        self.fields["candidate"].label_from_instance = lambda c: f"{c.full_name} ({c.email})"
+        opening = self.fields["opening"]
+        opening.label_from_instance = lambda o: f"{o.title} — {o.department}, {o.location}"
+        # Only open openings are offered. A closed one sent anyway (a crafted
+        # request, or one closed while the form was open) isn't a valid choice,
+        # so the server refuses it with this message.
+        opening.queryset = JobOpening.objects.filter(is_open=True)
+        opening.error_messages["invalid_choice"] = (
+            "This job opening is closed (or no longer exists), so it can't take "
+            "new applications. Choose an open opening."
+        )

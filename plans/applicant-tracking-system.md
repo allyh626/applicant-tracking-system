@@ -44,12 +44,12 @@ Set up the Django project with uv, the `hiring` app, django-tailwind-cli with Da
 
 ### Acceptance criteria
 
-- [ ] `uv run` starts the dev server, and Tailwind/DaisyUI styles and HTMX load on the page
-- [ ] An anonymous request to `/` redirects to the login page, and logging in returns the user to `/`
-- [ ] Logging out (POST) ends the session, and the user is sent back to login
-- [ ] An admin can create a staff account in the Django admin, and that account can log in
-- [ ] `ruff check` and `ruff format --check` pass
-- [ ] pytest runs, with a shared logged-in client fixture and a test that anonymous requests redirect to login
+- [x] `uv run` starts the dev server, and Tailwind/DaisyUI styles and HTMX load on the page
+- [x] An anonymous request to `/` redirects to the login page, and logging in returns the user to `/`
+- [x] Logging out (POST) ends the session, and the user is sent back to login
+- [x] An admin can create a staff account in the Django admin, and that account can log in
+- [x] `ruff check` and `ruff format --check` pass
+- [x] pytest runs, with a shared logged-in client fixture and a test that anonymous requests redirect to login
 
 ---
 
@@ -63,11 +63,11 @@ Add the `Skill` model and the `/skills/` page, which lists every skill alphabeti
 
 ### Acceptance criteria
 
-- [ ] Adding a skill on `/skills/` saves it and shows it in the list
-- [ ] Leading and trailing spaces are removed from saved names
-- [ ] "python" or " Python " is refused when "Python" exists, with a form error and no crash
-- [ ] The lowercased-name uniqueness is enforced by a database constraint (tested at the model level)
-- [ ] `/skills/` requires login
+- [x] Adding a skill on `/skills/` saves it and shows it in the list
+- [x] Leading and trailing spaces are removed from saved names
+- [x] "python" or " Python " is refused when "Python" exists, with a form error and no crash
+- [x] The lowercased-name uniqueness is enforced by a database constraint (tested at the model level)
+- [x] `/skills/` requires login
 
 ---
 
@@ -81,13 +81,13 @@ Add the `Candidate` model with its source choices, plus create, edit, detail and
 
 ### Acceptance criteria
 
-- [ ] A candidate can be created with the required fields only, or with all fields, and source is chosen from the four fixed options
-- [ ] A duplicate email is refused with a form error, and the uniqueness is enforced by the database
-- [ ] Editing a candidate saves the changes, and the detail page shows them
-- [ ] `?q=` matches on first name, last name or email, case-insensitively
-- [ ] `?source=` limits the list to that source, and it combines with `?q=`
-- [ ] The app's own pages have no delete action, and the admin can delete a candidate
-- [ ] All candidate pages require login
+- [x] A candidate can be created with the required fields only, or with all fields, and source is chosen from the four fixed options
+- [x] A duplicate email is refused with a form error, and the uniqueness is enforced by the database
+- [x] Editing a candidate saves the changes, and the detail page shows them
+- [x] `?q=` matches on first name, last name or email, case-insensitively
+- [x] `?source=` limits the list to that source, and it combines with `?q=`
+- [x] The app's own pages have no delete action, and the admin can delete a candidate
+- [x] All candidate pages require login
 
 ---
 
@@ -101,11 +101,11 @@ Add the `JobOpening` model with a many-to-many to `Skill`, plus create, edit, de
 
 ### Acceptance criteria
 
-- [ ] An opening can be created with a title, department, location, description and several skills
-- [ ] Editing an opening can change its fields and add or remove skills
-- [ ] One skill can be attached to several openings
-- [ ] The list and detail pages show department, location and required skills
-- [ ] All opening pages require login
+- [x] An opening can be created with a title, department, location, description and several skills
+- [x] Editing an opening can change its fields and add or remove skills
+- [x] One skill can be attached to several openings
+- [x] The list and detail pages show department, location and required skills
+- [x] All opening pages require login
 
 ---
 
@@ -119,11 +119,11 @@ Add close and reopen actions to the opening detail page. Closing asks for confir
 
 ### Acceptance criteria
 
-- [ ] Closing (after confirming) marks the opening closed, and reopening marks it open again
-- [ ] The close confirmation text states that existing applications are not affected
-- [ ] Close and reopen accept only POST, and a GET is refused
-- [ ] `?status=open|closed|all` filters the openings list correctly
-- [ ] The open/closed status is visible on the list and detail pages
+- [x] Closing (after confirming) marks the opening closed, and reopening marks it open again
+- [x] The close confirmation text states that existing applications are not affected
+- [x] Close and reopen accept only POST, and a GET is refused
+- [x] `?status=open|closed|all` filters the openings list correctly
+- [x] The open/closed status is visible on the list and detail pages
 
 ---
 
@@ -137,12 +137,12 @@ Add the `Application` model, which links a candidate to an opening, is unique pe
 
 ### Acceptance criteria
 
-- [ ] Creating an application saves it at the Applied stage
-- [ ] Closed openings are not offered in the form's opening choices
-- [ ] A crafted POST with a closed opening is refused with a form error
-- [ ] A second application for the same candidate and opening is refused with a form error, and the pair is unique at the database level
-- [ ] The candidate detail page lists their applications
-- [ ] Deleting a candidate in the admin also deletes their applications
+- [x] Creating an application saves it at the Applied stage
+- [x] Closed openings are not offered in the form's opening choices
+- [x] A crafted POST with a closed opening is refused with a form error
+- [x] A second application for the same candidate and opening is refused with a form error, and the pair is unique at the database level
+- [x] The candidate detail page lists their applications
+- [x] Deleting a candidate in the admin also deletes their applications
 
 ---
 

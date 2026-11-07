@@ -28,6 +28,85 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-06 — Phase 6 built: create applications
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 6`
+2. go ahead with those three
+3. yes that is good
+4. yes
+5. no that wording is good you can continue
+6. yes, go ahead with behavior 3
+7. yes that's good, make it pass
+8. yes, continue with the rest of phase 6
+9. do i need to apply migrations before manually verifying in the browser?
+10. okay i verified this in the browser and it works as should. can you
+    verify all the acceptance criteria mentioned in the plan  has been
+    accurately implemented ?
+11. can you check those off for phase six in the plan then? and can you
+    verify the acceptance criteria for all the previous phases have been
+    correctly implemented?
+12. yes, tick those boxes too
+13. can you check each acceptance criteria as the phase is being finished
+    before prompts.md is updated? i would also like for you to update the
+    prompts.md file for this session as well as commit and push for me as
+    for every phase in the future whenever I ask.
+
+### Summary
+- **Outcome:**
+  - Phase 6 is built. Added the `Application` model (migration 0005): FKs
+    to Candidate and JobOpening (both cascade on delete), a stage with the
+    eight fixed choices that defaults to Applied, timestamps, and a
+    database constraint allowing one application per candidate and opening.
+  - Added `/applications/new/`. Its opening dropdown offers only open
+    openings, so a closed one sent anyway is refused with a message saying
+    the opening is closed. A duplicate pair is refused with "<name> has
+    already applied to <opening>.", set on the model so the admin shows it
+    too. Choices show the candidate's email and the opening's department
+    and location.
+  - Candidate and open-opening pages have an Add application button that
+    pre-selects that candidate or opening (`?candidate=` / `?opening=`).
+    The candidate page now lists their applications with a stage badge.
+    Application is in the admin with the stage read-only, so stages can
+    only change through the Phase 7 pipeline.
+  - Three behaviors were built test-first: a crafted POST with a closed
+    opening is refused, a duplicate application is refused with a clear
+    message, and a new application starts at Applied and shows on the
+    candidate page. 17 more tests cover the dropdown, the database
+    constraint, the pre-select, empty states, the admin and login.
+  - 124 tests pass; ruff check and format are clean.
+  - All acceptance criteria for Phases 1-6 were checked against the code,
+    the tests and a short run of the real dev server (CSS and HTMX load),
+    and ticked in the plan. Nothing was missing.
+- **Deviations:**
+  - No recommendations were overridden.
+  - The user asked whether migrations had to be applied before checking
+    in the browser. Yes: 0005 wasn't applied to the dev database.
+  - The user asked for every plan criterion to be verified, for Phases 1-5
+    as well as 6, and the boxes ticked. From now on, each phase's criteria
+    are ticked before the PROMPTS.md entry, and the agent commits and
+    pushes when asked.
+  - Two things were left for later: archived candidates can still be
+    chosen (Phase 9), and the Django admin can still add an application
+    to a closed opening (the PRD only requires the app's form to refuse
+    it).
+- **Sideways:**
+  - The candidate page first said "Applied <date>" under each
+    application, which would have made test 3's `"Applied" in html` check
+    pass even with a wrong stage. It was reworded to "Created <date>".
+  - A normal-process test posted an empty body, which Django treats as an
+    unsubmitted form, so it saw no errors. The test was changed to send
+    blank fields, like a browser does.
+  - The agent's own review found that `?candidate=²` would crash the form
+    with a 500 error (`isdigit()` accepts "²" but `int()` can't read it).
+    The check was changed to `isdecimal()` and the case added to a test.
+  - Ruff flagged an en dash in a comment (RUF003) and one line to
+    reformat; both were fixed.
+  - The implement skill says to commit and push, but CLAUDE.md says to
+    wait until the user asks, so the agent waited. The user asked at the
+    end.
+
 ## 2026-11-06 — Phase 5 built: close and reopen openings, and the openings filter
 
 ### Prompts

@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.functions import Lower
 
@@ -123,3 +124,56 @@ class JobOpening(models.Model):
         self.department = self.department.strip()
         self.location = self.location.strip()
         super().save(*args, **kwargs)
+
+
+class Application(models.Model):
+    """One candidate applying to one job opening, moving through the hiring stages."""
+
+    class Stage(models.TextChoices):
+        # In hiring order. The last three are final (Phase 7 adds the move rules).
+        APPLIED = "applied", "Applied"
+        SCREENING = "screening", "Screening"
+        INTERVIEW = "interview", "Interview"
+        FINAL_REVIEW = "final_review", "Final Review"
+        OFFER = "offer", "Offer"
+        HIRED = "hired", "Hired"
+        REJECTED = "rejected", "Rejected"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    # CASCADE: deleting a candidate (admin only) also deletes their applications.
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE, related_name="applications")
+    opening = models.ForeignKey(
+        JobOpening,
+        on_delete=models.CASCADE,
+        related_name="applications",
+        verbose_name="job opening",
+    )
+    # Never set this directly once the application exists: Phase 7 adds the one
+    # method that changes the stage and records who did it.
+    stage = models.CharField(max_length=20, choices=Stage, default=Stage.APPLIED)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["candidate", "opening"],
+                name="unique_application_per_candidate_and_opening",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.candidate} → {self.opening}"
+
+    def unique_error_message(self, model_class, unique_check):
+        # Django calls this when the candidate/opening constraint is broken. It
+        # replaces the default "Application with this Candidate and Job opening
+        # already exists." with one that names the person and the role, in the
+        # app's form and in the admin alike.
+        if set(unique_check) == {"candidate", "opening"}:
+            return ValidationError(
+                f"{self.candidate} has already applied to {self.opening}.",
+                code="unique_together",
+            )
+        return super().unique_error_message(model_class, unique_check)

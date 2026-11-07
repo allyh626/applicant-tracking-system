@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}New application{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">New application</h1>
+
+  <div class="card bg-base-100 shadow max-w-2xl">
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+          <div role="alert" class="alert alert-error mb-3">{{ error }}</div>
+        {% endfor %}
+        {% for field in form %}
+          <fieldset class="fieldset">
+            <label class="fieldset-legend" for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
+            {% if not field.field.queryset.exists %}
+              {% if field.name == 'opening' %}
+                <p class="opacity-70">No open job openings. <a class="link" href="{% url 'hiring:opening_list' %}">Create or reopen one</a> first.</p>
+              {% else %}
+                <p class="opacity-70">No candidates yet. <a class="link" href="{% url 'hiring:candidate_create' %}">Add a candidate</a> first.</p>
+              {% endif %}
+            {% else %}
+              {{ field }}
+            {% endif %}
+            {% for error in field.errors %}
+              <p class="text-error text-sm">{{ error }}</p>
+            {% endfor %}
+          </fieldset>
+        {% endfor %}
+        <p class="text-sm opacity-70 mt-2">Only open job openings are listed. The application starts at the Applied stage.</p>
+        <div class="mt-4 flex gap-2">
+          <button type="submit" class="btn btn-primary">Create application</button>
+          {% if form.initial.candidate %}
+            <a href="{% url 'hiring:candidate_detail' form.initial.candidate %}" class="btn btn-ghost">Cancel</a>
+          {% elif form.initial.opening %}
+            <a href="{% url 'hiring:opening_detail' form.initial.opening %}" class="btn btn-ghost">Cancel</a>
+          {% else %}
+            <a href="{% url 'hiring:candidate_list' %}" class="btn btn-ghost">Cancel</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
