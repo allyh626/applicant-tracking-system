@@ -1,0 +1,2 @@
+{# A coloured badge for an application's stage. Final stages get their own colours. #}
+<span class="badge whitespace-nowrap {% if application.stage == 'hired' %}badge-success{% elif application.stage == 'rejected' %}badge-error{% elif application.stage == 'withdrawn' %}badge-neutral{% elif application.stage == 'offer' %}badge-accent{% else %}badge-soft badge-primary{% endif %}">{{ application.get_stage_display }}</span>

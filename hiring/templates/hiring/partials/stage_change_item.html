@@ -1,0 +1,6 @@
+{# One stage history entry. Context: change (a StageChange). #}
+<li class="py-2" id="stage-change-{{ change.pk }}">
+  <span class="font-medium">{{ change.application.candidate.full_name }}</span>:
+  {{ change.get_from_stage_display }} &rarr; {{ change.get_to_stage_display }}
+  <div class="text-xs opacity-60" title="{{ change.changed_at|date:'M j, Y, g:i a' }}">by {{ change.changed_by.get_username }} &middot; {{ change.changed_at|timesince }} ago</div>
+</li>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opening.title }} pipeline{% endblock %}
+
+{% block content %}
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <a href="{% url 'hiring:opening_detail' opening.pk %}" class="link link-hover text-sm opacity-70">&larr; {{ opening.title }}</a>
+      <h1 class="text-2xl font-bold">{{ opening.title }}: pipeline
+        {% if opening.is_open %}<span class="badge badge-success align-middle">Open</span>{% else %}<span class="badge badge-ghost align-middle">Closed</span>{% endif %}
+      </h1>
+      {% if not opening.is_open %}
+        <p class="text-sm opacity-70">This opening is closed to new applications. The applications below can still be moved as normal.</p>
+      {% endif %}
+    </div>
+    {% if opening.is_open %}
+      <a href="{% url 'hiring:application_create' %}?opening={{ opening.pk }}" class="btn btn-primary">Add application</a>
+    {% endif %}
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="card bg-base-100 shadow lg:col-span-2">
+      <div class="card-body">
+        {% if applications %}
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr><th>Candidate</th><th>Stage</th><th>Stage changed</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {% for application in applications %}
+                  {% include "hiring/partials/pipeline_row.html" %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="opacity-70">No applications for this opening yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow h-fit">
+      <div class="card-body">
+        <h2 class="card-title">Recent stage changes</h2>
+        <ul id="stage-history" class="text-sm divide-y divide-base-200">
+          {% for change in recent_changes %}
+            {% include "hiring/partials/stage_change_item.html" %}
+          {% endfor %}
+          {# Shown only while it is the list's only item, so it hides itself once a move adds an entry. #}
+          <li class="hidden only:block py-2 opacity-70">No stage changes yet.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

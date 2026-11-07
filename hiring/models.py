@@ -1,6 +1,10 @@
+from itertools import pairwise
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 from .search import fold
 
@@ -126,11 +130,15 @@ class JobOpening(models.Model):
         super().save(*args, **kwargs)
 
 
+class StageMoveError(Exception):
+    """Raised by Application.move_to() when a move breaks the stage rules."""
+
+
 class Application(models.Model):
     """One candidate applying to one job opening, moving through the hiring stages."""
 
     class Stage(models.TextChoices):
-        # In hiring order. The last three are final (Phase 7 adds the move rules).
+        # In hiring order. The last three are final: see ALLOWED_MOVES below.
         APPLIED = "applied", "Applied"
         SCREENING = "screening", "Screening"
         INTERVIEW = "interview", "Interview"
@@ -148,9 +156,12 @@ class Application(models.Model):
         related_name="applications",
         verbose_name="job opening",
     )
-    # Never set this directly once the application exists: Phase 7 adds the one
-    # method that changes the stage and records who did it.
+    # Never set this directly once the application exists: use move_to(), which
+    # checks the rules and records who made the change.
     stage = models.CharField(max_length=20, choices=Stage, default=Stage.APPLIED)
+    # When the stage last changed (the pipeline shows it). Set on creation and
+    # by move_to(). Separate from updated_at, which changes on any edit.
+    stage_changed_at = models.DateTimeField(default=timezone.now, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -177,3 +188,106 @@ class Application(models.Model):
                 code="unique_together",
             )
         return super().unique_error_message(model_class, unique_check)
+
+    def allowed_moves(self):
+        """The stages this application may move to next (empty when final)."""
+        return ALLOWED_MOVES[self.stage]
+
+    @property
+    def is_final(self):
+        return not self.allowed_moves()
+
+    def move_to(self, new_stage, user):
+        """The one way to change the stage: check the rules, move, and record it.
+
+        The stage update and the StageChange row are written together, or
+        neither is. Raises StageMoveError (and writes nothing) if the move
+        isn't allowed. Returns the new StageChange.
+        """
+        if new_stage not in self.allowed_moves():
+            raise StageMoveError(self._refusal_message(new_stage))
+        old_stage = self.stage
+        now = timezone.now()
+        with transaction.atomic():
+            # Update only if the stage in the database is still the one we
+            # checked. If a colleague moved it a moment ago, nothing matches,
+            # and the move is refused instead of being recorded twice.
+            moved = Application.objects.filter(pk=self.pk, stage=old_stage).update(
+                stage=new_stage, stage_changed_at=now, updated_at=now
+            )
+            if not moved:
+                # Only the stage fields, so the cached candidate and opening stay.
+                self.refresh_from_db(fields=["stage", "stage_changed_at", "updated_at"])
+                raise StageMoveError(
+                    f"Someone else just moved this application to "
+                    f"{self.get_stage_display()}. Check its stage and try again."
+                )
+            change = StageChange.objects.create(
+                application=self,
+                from_stage=old_stage,
+                to_stage=new_stage,
+                changed_by=user,
+                changed_at=now,
+            )
+        self.stage = new_stage
+        self.stage_changed_at = self.updated_at = now
+        return change
+
+    def _refusal_message(self, new_stage):
+        current = self.get_stage_display()
+        if self.is_final:
+            return f"This application is already {current}, which is final."
+        # .get(): a crafted request can send any text, not just a real stage.
+        target = dict(self.Stage.choices).get(new_stage, new_stage)
+        return f"Can't move from {current} to {target}."
+
+
+# The stage rules, all in one place: each stage maps to the stages it may move
+# to. One step forward at a time; Reject or Withdraw from any stage that isn't
+# final; Hired, Rejected and Withdrawn allow no moves (so no going backwards).
+_Stage = Application.Stage
+_FORWARD = [
+    _Stage.APPLIED,
+    _Stage.SCREENING,
+    _Stage.INTERVIEW,
+    _Stage.FINAL_REVIEW,
+    _Stage.OFFER,
+    _Stage.HIRED,
+]
+ALLOWED_MOVES = {
+    **{
+        stage: [next_stage, _Stage.REJECTED, _Stage.WITHDRAWN]
+        for stage, next_stage in pairwise(_FORWARD)
+    },
+    _Stage.HIRED: [],
+    _Stage.REJECTED: [],
+    _Stage.WITHDRAWN: [],
+}
+
+
+class StageChange(models.Model):
+    """One stage move, kept forever: who moved which application, from where to where, when.
+
+    Append-only: rows are written by Application.move_to() and never edited.
+    """
+
+    # CASCADE: deleting a candidate in the admin deletes their history too.
+    application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, related_name="stage_changes"
+    )
+    from_stage = models.CharField(max_length=20, choices=Application.Stage)
+    to_stage = models.CharField(max_length=20, choices=Application.Stage)
+    # PROTECT: a staff account with recorded decisions can't be deleted (it
+    # can still be deactivated in the admin), so the history keeps its names.
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="stage_changes"
+    )
+    changed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["changed_at", "pk"]
+
+    def __str__(self):
+        return (
+            f"{self.application}: {self.get_from_stage_display()} → {self.get_to_stage_display()}"
+        )

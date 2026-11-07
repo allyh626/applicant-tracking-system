@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import ApplicationForm, CandidateForm, JobOpeningForm, SkillForm
-from .models import Candidate, JobOpening, Skill
+from .models import Application, Candidate, JobOpening, Skill, StageChange, StageMoveError
 from .search import fold
 
 
@@ -161,6 +161,41 @@ def application_create(request):
         # Back to the candidate, whose page lists their applications.
         return redirect("hiring:candidate_detail", pk=application.candidate_id)
     return render(request, "hiring/application_form.html", {"form": form})
+
+
+RECENT_CHANGES_LIMIT = 20
+
+
+def opening_pipeline(request, pk):
+    """One opening's applications, each with buttons for the moves it allows."""
+    opening = get_object_or_404(JobOpening, pk=pk)
+    applications = opening.applications.select_related("candidate")
+    recent_changes = (
+        StageChange.objects.filter(application__opening=opening)
+        .select_related("application__candidate", "changed_by")
+        .order_by("-changed_at", "-pk")[:RECENT_CHANGES_LIMIT]
+    )
+    return render(
+        request,
+        "hiring/pipeline.html",
+        {"opening": opening, "applications": applications, "recent_changes": recent_changes},
+    )
+
+
+@require_POST
+def application_move(request, pk):
+    """HTMX endpoint: move one application, and return only its re-rendered row."""
+    application = get_object_or_404(Application.objects.select_related("candidate"), pk=pk)
+    context = {"application": application}
+    try:
+        # Never set the stage here: move_to() checks the rules on the server,
+        # whatever the browser sent.
+        # The new history entry goes back too, out-of-band (see the row template).
+        context["change"] = application.move_to(request.POST.get("to", ""), request.user)
+    except StageMoveError as error:
+        # Still 200, so HTMX swaps the row in and the message shows inside it.
+        context["error"] = str(error)
+    return render(request, "hiring/partials/pipeline_row.html", context)
 
 
 def opening_edit(request, pk):

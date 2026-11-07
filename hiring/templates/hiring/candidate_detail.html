@@ -42,7 +42,7 @@
                   <a class="link link-hover font-medium" href="{% url 'hiring:opening_detail' application.opening.pk %}">{{ application.opening.title }}</a>
                   <p class="text-xs opacity-60">Created {{ application.created_at|date:"M j, Y" }}</p>
                 </div>
-                <span class="badge badge-soft badge-primary whitespace-nowrap">{{ application.get_stage_display }}</span>
+                {% include "hiring/partials/stage_badge.html" %}
               </li>
             {% endfor %}
           </ul>

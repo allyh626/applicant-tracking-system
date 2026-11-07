@@ -17,5 +17,7 @@ urlpatterns = [
     path("openings/<int:pk>/edit/", views.opening_edit, name="opening_edit"),
     path("openings/<int:pk>/close/", views.opening_close, name="opening_close"),
     path("openings/<int:pk>/reopen/", views.opening_reopen, name="opening_reopen"),
+    path("openings/<int:pk>/pipeline/", views.opening_pipeline, name="opening_pipeline"),
     path("applications/new/", views.application_create, name="application_create"),
+    path("applications/<int:pk>/move/", views.application_move, name="application_move"),
 ]

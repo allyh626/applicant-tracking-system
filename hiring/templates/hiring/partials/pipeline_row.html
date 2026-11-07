@@ -1,0 +1,46 @@
+{% comment %}
+One application's row on the pipeline page. The move endpoint re-renders just
+this row and HTMX swaps it in place of the old one (hx-target="closest tr").
+
+Context: application, and optionally error (a refused move's message) and
+change (the StageChange a successful move just wrote).
+{% endcomment %}
+<tr id="application-{{ application.pk }}" class="{% if error %}bg-error/10{% endif %}">
+  <td>
+    <a class="link link-hover font-medium" href="{% url 'hiring:candidate_detail' application.candidate.pk %}">{{ application.candidate.full_name }}</a>
+    <div class="text-sm opacity-60">{{ application.candidate.email }}</div>
+  </td>
+  <td>{% include "hiring/partials/stage_badge.html" %}</td>
+  <td class="text-sm opacity-70" title="{{ application.stage_changed_at|date:'M j, Y, g:i a' }}">{{ application.stage_changed_at|timesince }} ago</td>
+  <td>
+    {# The buttons inherit where the response goes from this wrapper: it replaces the whole row. #}
+    <div class="flex flex-wrap gap-2" hx-target="closest tr" hx-swap="outerHTML">
+      {# Only the moves the rules allow get a button. The server checks again anyway. #}
+      {% for stage in application.allowed_moves %}
+        <button type="button"
+                hx-post="{% url 'hiring:application_move' application.pk %}" hx-vals='{"to": "{{ stage.value }}"}'
+                {% if stage == "rejected" %}
+                  class="btn btn-sm btn-error btn-outline"
+                  hx-confirm="Reject {{ application.candidate.full_name }}? This is final and can't be undone."
+                {% elif stage == "withdrawn" %}
+                  class="btn btn-sm btn-ghost"
+                  hx-confirm="Mark {{ application.candidate.full_name }} as withdrawn? This is final and can't be undone."
+                {% else %}
+                  class="btn btn-sm btn-primary"
+                {% endif %}>{% if stage == "rejected" %}Reject{% elif stage == "withdrawn" %}Withdraw{% else %}Move to {{ stage.label }}{% endif %}</button>
+      {% empty %}
+        <span class="text-sm opacity-60">Final stage: no moves</span>
+      {% endfor %}
+    </div>
+    {% if error %}<div class="text-error text-sm mt-1" role="alert">{{ error }}</div>{% endif %}
+  </td>
+</tr>
+{% if change %}
+  {# Out-of-band: HTMX adds this entry to the top of the page's stage history list. #}
+  {# <template> keeps the browser from dropping it, since a <tr> can't sit next to other elements. #}
+  <template>
+    <div hx-swap-oob="afterbegin:#stage-history">
+      {% include "hiring/partials/stage_change_item.html" %}
+    </div>
+  </template>
+{% endif %}

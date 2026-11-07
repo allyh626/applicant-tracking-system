@@ -158,16 +158,16 @@ Clicking a button sends an HTMX POST to `/applications/<pk>/move/`. The server r
 
 ### Acceptance criteria
 
-- [ ] Every allowed move succeeds: each forward stage to the next one, and every non-final stage to Rejected or Withdrawn
-- [ ] Skipping ahead, moving backwards, and moving out of Hired, Rejected or Withdrawn are all refused by the model method
-- [ ] A successful move writes exactly one `StageChange` with the correct previous stage, new stage and user
-- [ ] A refused move writes no `StageChange` and leaves the stage unchanged
-- [ ] The move endpoint returns only the row fragment and an out-of-band history entry
-- [ ] A crafted request for a disallowed move returns HTTP 200 with an error message inside the row
-- [ ] Only the next-stage, Reject and Withdraw buttons appear on active rows, and none on final rows
-- [ ] Reject and Withdraw ask for confirmation before posting
-- [ ] Applications under a closed opening can still be moved
-- [ ] The move endpoint accepts only POST and requires login
+- [x] Every allowed move succeeds: each forward stage to the next one, and every non-final stage to Rejected or Withdrawn
+- [x] Skipping ahead, moving backwards, and moving out of Hired, Rejected or Withdrawn are all refused by the model method
+- [x] A successful move writes exactly one `StageChange` with the correct previous stage, new stage and user
+- [x] A refused move writes no `StageChange` and leaves the stage unchanged
+- [x] The move endpoint returns only the row fragment and an out-of-band history entry
+- [x] A crafted request for a disallowed move returns HTTP 200 with an error message inside the row
+- [x] Only the next-stage, Reject and Withdraw buttons appear on active rows, and none on final rows
+- [x] Reject and Withdraw ask for confirmation before posting
+- [x] Applications under a closed opening can still be moved
+- [x] The move endpoint accepts only POST and requires login
 
 ---
 

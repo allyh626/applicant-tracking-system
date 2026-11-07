@@ -9,6 +9,8 @@
       <h1 class="text-2xl font-bold">{{ opening.title }}</h1>
     </div>
     <div class="flex gap-2">
+      {# Closed openings keep a pipeline: their applications can still be moved. #}
+      <a href="{% url 'hiring:opening_pipeline' opening.pk %}" class="btn btn-secondary">Pipeline</a>
       {% if opening.is_open %}
         {# Closed openings can't take new applications, so no button for them. #}
         <a href="{% url 'hiring:application_create' %}?opening={{ opening.pk }}" class="btn btn-primary">Add application</a>

@@ -28,6 +28,99 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-07 — Phase 7 built: pipeline page with HTMX stage moves
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 7`
+2. (Answered a question dialog: chose "New stage_changed_at
+   (Recommended)" for where the pipeline's "stage last changed" time comes
+   from, which also approved the three TDD behaviors.)
+3. yes that's good, make it pass
+4. yes, go ahead with behavior 2
+5. i like the behavior described but why is it not a true tdd test, are
+   you not able to test it correctly as so?
+6. yes could you make sure it fails before moving on?
+7. yes, go ahead with behavior 3
+8. yes you can make it pass
+9. yes you can continue
+10. yes make it pass now
+11. okay you can continue with the rest of the phase
+12. can you provide me with a pipline url
+13. when logged out i am already on the login page by default no? in
+    response to the tenth check for the broswer testing
+14. i verified it in the browser and it works, tick the boxes
+15. yes can you please update prompts.md for this session then commit and
+    push
+
+### Summary
+- **Outcome:**
+  - Phase 7 is built. Added the `StageChange` model (application, from
+    stage, to stage, the user who made the move, and when) and a
+    `stage_changed_at` field on Application (migration 0006). The
+    migration fills `stage_changed_at` from `created_at` for applications
+    that already exist.
+  - The stage rules live in one table, `ALLOWED_MOVES`: one step forward,
+    or Reject/Withdraw from any stage that isn't final; Hired, Rejected and
+    Withdrawn allow nothing. `Application.move_to()` is the only way to
+    change a stage. It checks the rule, then updates the stage and writes
+    the `StageChange` in one transaction. The update only applies if the
+    stage is still the one it checked, so two people moving the same
+    application at once can't record two moves. A refused move raises
+    `StageMoveError` and writes nothing.
+  - Added the pipeline page at `/openings/<pk>/pipeline/` (candidate,
+    stage badge, when the stage last changed, the stage buttons, and a
+    "Recent stage changes" list) and the HTMX endpoint
+    `/applications/<pk>/move/` (POST only). It returns just the row, plus
+    the new history entry out-of-band inside a `<template>`. A refused move
+    returns the row with the error inside it, with HTTP 200. Reject and
+    Withdraw ask for confirmation. Closed openings' applications can still
+    be moved.
+  - The opening detail page and the openings list link to the pipeline.
+    The application admin shows its stage history read-only, as an inline,
+    so deleting a candidate in the admin can still cascade.
+  - Three behaviors were built test-first: the full rule table (all 64
+    from/to pairs), a move writes exactly one correct `StageChange`, and
+    the move endpoint (a crafted refused move, then a successful move with
+    the out-of-band entry, as two separate RED/GREEN steps). 17 more
+    tests cover the buttons per stage, the confirmations, the page
+    contents, closed openings, the concurrent move, POST-only, login, 404,
+    links and the admin.
+  - 212 tests pass; ruff check and format are clean. The user checked the
+    phase in the browser, and all 10 Phase 7 criteria were ticked in the
+    plan.
+- **Deviations:**
+  - No recommendations were overridden.
+  - The user asked why the refused-move test wasn't a "true" TDD test. It
+    passed as soon as it was written, because the rule check already ran
+    before any write, so it never had a RED step. At the user's request
+    the agent broke `move_to()` on purpose (writing history before the
+    check), showed the test fail, then undid the break.
+  - The user asked for a pipeline URL. The dev database had openings 1
+    (closed) and 2 (open) but no applications, so the agent explained how
+    to add some first.
+  - The user asked about verification step 10, since logging out already
+    shows the login page. The agent clarified that the step is to open a
+    pipeline URL while logged out, and check the `?next=` redirect.
+- **Sideways:**
+  - Cycle 2's first RED was a `DoesNotExist` exception rather than an
+    assertion failure, so the test was changed to count rows with an
+    assertion before going on.
+  - A normal-process test helper split the page on `</button>`, which
+    lumped the navbar's Log out button in with the first stage button. It
+    was replaced with a regex.
+  - Ruff flagged `zip()` over successive pairs (RUF007), so the table
+    uses `itertools.pairwise`, and two lines were reformatted.
+  - The code review found eight issues, and five were fixed: the
+    migration would have stamped every existing application with the
+    migration time, the concurrent-move path reloaded every field and
+    dropped the cached candidate, a timestamp test could sometimes fail on
+    Windows, the out-of-band entry sat in a bare `<div>` after a `<tr>`
+    (now in a `<template>`, after checking HTMX 2.0.11 supports that), and
+    the three buttons repeated their HTMX attributes. The migration had
+    already been applied to the dev database (with no applications), so it
+    was rolled back and applied again.
+
 ## 2026-11-06 — Phase 6 built: create applications
 
 ### Prompts
