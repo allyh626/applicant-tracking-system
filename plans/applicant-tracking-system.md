@@ -199,12 +199,12 @@ Add Archive and Restore actions to the candidate detail page. Archiving is refus
 
 ### Acceptance criteria
 
-- [ ] Archiving is refused, with an explanatory message, while the candidate has any active application
-- [ ] Archiving succeeds once all applications are final, or when there are none
-- [ ] Restore clears the archived flag
-- [ ] Archive and restore accept only POST
-- [ ] The candidate list hides archived candidates by default and shows them with the toggle, combined with search and the source filter
-- [ ] Archived candidates are not offered in the application form, and a crafted POST with one is refused
+- [x] Archiving is refused, with an explanatory message, while the candidate has any active application
+- [x] Archiving succeeds once all applications are final, or when there are none
+- [x] Restore clears the archived flag
+- [x] Archive and restore accept only POST
+- [x] The candidate list hides archived candidates by default and shows them with the toggle, combined with search and the source filter
+- [x] Archived candidates are not offered in the application form, and a crafted POST with one is refused
 
 ---
 

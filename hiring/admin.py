@@ -1,6 +1,24 @@
+from django import forms
 from django.contrib import admin
 
 from .models import Application, Candidate, JobOpening, Skill, StageChange
+
+
+class CandidateAdminForm(forms.ModelForm):
+    """Lets the admin restore a candidate, but not archive one with active applications.
+
+    No Meta: the admin fills in the model and fields when it builds the form.
+    """
+
+    def clean_archived(self):
+        archived = self.cleaned_data["archived"]
+        candidate = self.instance
+        # Only newly ticking the box is checked; unticking (restore) is always fine.
+        if archived and not candidate.archived and candidate.pk:
+            active = candidate.active_application_count()
+            if active:
+                raise forms.ValidationError(candidate.archive_refusal_message(active))
+        return archived
 
 
 @admin.register(Skill)
@@ -16,6 +34,7 @@ class CandidateAdmin(admin.ModelAdmin):
     list_display = ["last_name", "first_name", "email", "source", "archived"]
     list_filter = ["source", "archived"]
     search_fields = ["first_name", "last_name", "email"]
+    form = CandidateAdminForm
 
 
 @admin.register(JobOpening)

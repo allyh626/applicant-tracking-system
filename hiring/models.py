@@ -60,7 +60,8 @@ class Candidate(models.Model):
     )
     notes = models.TextField(blank=True)
     profile_url = models.URLField("profile/resume URL", blank=True)
-    # Archive and restore are built in Phase 9.
+    # Hidden from lists and new applications. Change it with archive() and
+    # restore(), not directly: archive() checks for active applications.
     archived = models.BooleanField(default=False)
     # Name and email, lowercased with accents removed, for the list search.
     # Filled in by save(), never typed. (A bulk QuerySet.update() skips save(),
@@ -100,6 +101,38 @@ class Candidate(models.Model):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+
+    def archive(self):
+        """Hide this candidate from the lists, keeping all their history.
+
+        Refused (raises ArchiveError, changes nothing) while any of their
+        applications is still active, so no applicant in progress disappears.
+        """
+        active = self.active_application_count()
+        if active:
+            raise ArchiveError(self.archive_refusal_message(active))
+        self.archived = True
+        self.save(update_fields=["archived", "updated_at"])
+
+    def active_application_count(self):
+        """How many of their applications aren't Hired, Rejected or Withdrawn."""
+        return self.applications.exclude(stage__in=FINAL_STAGES).count()
+
+    def archive_refusal_message(self, active):
+        noun = "application" if active == 1 else "applications"
+        return (
+            f"{self.full_name} can't be archived yet: first reject or withdraw "
+            f"their {active} active {noun}."
+        )
+
+    def restore(self):
+        """Undo archive(): the candidate shows in the lists and can apply again."""
+        self.archived = False
+        self.save(update_fields=["archived", "updated_at"])
+
+
+class ArchiveError(Exception):
+    """Raised by Candidate.archive() while the candidate has active applications."""
 
 
 class JobOpening(models.Model):
@@ -263,6 +296,8 @@ ALLOWED_MOVES = {
     _Stage.REJECTED: [],
     _Stage.WITHDRAWN: [],
 }
+# Hired, Rejected and Withdrawn: the stages with no moves left.
+FINAL_STAGES = [stage for stage, moves in ALLOWED_MOVES.items() if not moves]
 
 
 class StageChange(models.Model):

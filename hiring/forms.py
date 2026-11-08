@@ -81,7 +81,15 @@ class ApplicationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Show enough in each choice to tell two "Ana Lopez"es or two
         # "Data Analyst" openings apart.
-        self.fields["candidate"].label_from_instance = lambda c: f"{c.full_name} ({c.email})"
+        candidate = self.fields["candidate"]
+        candidate.label_from_instance = lambda c: f"{c.full_name} ({c.email})"
+        # Archived candidates are left out the same way. One sent anyway is
+        # refused: restore them first ("archived" means "inactive").
+        candidate.queryset = Candidate.objects.filter(archived=False)
+        candidate.error_messages["invalid_choice"] = (
+            "This candidate is archived (or no longer exists), so they can't "
+            "receive new applications. Restore them first."
+        )
         opening = self.fields["opening"]
         opening.label_from_instance = lambda o: f"{o.title} — {o.department}, {o.location}"
         # Only open openings are offered. A closed one sent anyway (a crafted

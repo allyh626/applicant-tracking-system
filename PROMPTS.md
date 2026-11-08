@@ -28,6 +28,84 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-08 — Phase 9 built: archive and restore candidates
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 9`
+2. yes those are good behaviors
+3. yes, make it pass
+4. yes, move on to behavior 2
+5. yes, make it pass
+6. yes, move on to behavior 3
+7. yes you can make it pass
+8. yes you can continue the phase
+9. can you give me the exact link to test number eight i eep getting a 404
+10. okay i tested this in the browser and it works as should
+11. add the PROMPTS.md entry, then commit and push
+
+### Summary
+- **Outcome:**
+  - Phase 9 is built. `Candidate.archive()` refuses, raising
+    `ArchiveError` and changing nothing, while any application isn't
+    Hired, Rejected or Withdrawn. The message says to "first reject or
+    withdraw their N active application(s)". `restore()` clears the flag.
+    A new `FINAL_STAGES` list is built from `ALLOWED_MOVES`, so "final"
+    is still defined in one place.
+  - New POST-only URLs: `/candidates/<pk>/archive/` and
+    `/candidates/<pk>/restore/`. They redirect to the candidate page with
+    a success, error or "already archived/active" message. `base.html`
+    now shows Django messages on every page.
+  - The candidate page has Archive/Restore buttons, an Archived badge and
+    notice, and hides "Add application" while the candidate is archived
+    (Edit stays). The list hides archived candidates unless
+    `?archived=1` ("Show archived" checkbox), which combines with search
+    and the source filter. The application form leaves archived
+    candidates out, and a crafted POST with one is refused under the
+    Candidate field.
+  - In the Django admin, archiving follows the same active-applications
+    rule (a custom admin form), and restoring is allowed.
+  - Three behaviors were built test-first: the archive refusal/success
+    rule, the show-archived toggle with the other filters, and refusing
+    an archived candidate in the application form (12 test cases). 23
+    more cases cover restore, POST-only, 404, login, buttons, badges,
+    empty-list wording, editing while archived, repeat clicks and the
+    admin.
+  - 259 tests pass; ruff check and format are clean; no migration was
+    needed (the `archived` field already existed). The user checked the
+    phase in the browser, and all 6 Phase 9 criteria were ticked in the
+    plan.
+- **Deviations:**
+  - No recommendations were overridden.
+  - The user asked for the exact link for browser check 8 (a GET to the
+    archive URL) after getting a 404. The real candidate IDs were listed
+    from the dev database, and the link given was
+    `http://127.0.0.1:8000/candidates/1/archive/`. The steps had shown
+    `<id>` as a placeholder, and there is no candidate 2, so either would
+    give a 404.
+- **Sideways:**
+  - Cycle 1's first message began "Reject or withdraw" with a capital R,
+    so it failed the approved test's lowercase "reject or withdraw"
+    check. The message was reworded rather than changing the approved
+    test.
+  - At first, `archived` was made read-only in the admin. The code review
+    pointed out that this also blocked restoring there, so it was
+    replaced with an admin form that refuses only archiving with active
+    applications. The first admin test would also have passed on an
+    invalid form; a check that the save went through (302) was added.
+  - The review's other fixes: the "has archived" query now runs only when
+    the list is empty, the no-matches hint mentions archived candidates
+    only when some exist, and repeating archive/restore says "already …"
+    instead of reporting a change. Three findings were left as they are,
+    with reasons given: the admin can still add an application for an
+    archived candidate (it already allows closed openings), a tiny
+    archive-vs-new-application race (SQLite has no row locks), and an old
+    `?candidate=` link to an archived person pre-fills nothing without
+    saying why.
+  - An early edit dropped a space in `views.py`, and `fields = "__all__"`
+    tripped ruff's DJ007. `ruff format` fixed the first; the second was
+    fixed by removing the admin form's `Meta`.
+
 ## 2026-11-08 — Phase 8 built: pipeline stage filter and application history page
 
 ### Prompts

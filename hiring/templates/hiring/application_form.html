@@ -19,7 +19,7 @@
               {% if field.name == 'opening' %}
                 <p class="opacity-70">No open job openings. <a class="link" href="{% url 'hiring:opening_list' %}">Create or reopen one</a> first.</p>
               {% else %}
-                <p class="opacity-70">No candidates yet. <a class="link" href="{% url 'hiring:candidate_create' %}">Add a candidate</a> first.</p>
+                <p class="opacity-70">No active candidates. <a class="link" href="{% url 'hiring:candidate_create' %}">Add a candidate</a> (or restore an archived one) first.</p>
               {% endif %}
             {% else %}
               {{ field }}
@@ -29,7 +29,7 @@
             {% endfor %}
           </fieldset>
         {% endfor %}
-        <p class="text-sm opacity-70 mt-2">Only open job openings are listed. The application starts at the Applied stage.</p>
+        <p class="text-sm opacity-70 mt-2">Only open job openings and active (not archived) candidates are listed. The application starts at the Applied stage.</p>
         <div class="mt-4 flex gap-2">
           <button type="submit" class="btn btn-primary">Create application</button>
           {% if form.initial.candidate %}

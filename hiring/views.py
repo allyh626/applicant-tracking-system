@@ -1,8 +1,17 @@
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import ApplicationForm, CandidateForm, JobOpeningForm, SkillForm
-from .models import Application, Candidate, JobOpening, Skill, StageChange, StageMoveError
+from .models import (
+    Application,
+    ArchiveError,
+    Candidate,
+    JobOpening,
+    Skill,
+    StageChange,
+    StageMoveError,
+)
 from .search import fold
 
 
@@ -35,7 +44,11 @@ def candidate_list(request):
     source = request.GET.get("source", "")
     if source not in Candidate.Source.values:
         source = ""  # an unknown value (old bookmark, typo) means "all sources"
+    # The show-archived toggle: ?archived=1 adds archived candidates to the list.
+    show_archived = request.GET.get("archived") == "1"
     candidates = Candidate.objects.all()
+    if not show_archived:
+        candidates = candidates.filter(archived=False)
     # Each word must appear somewhere in the name or email, so "ana lopez" finds
     # Ana López. search_text is already lowercased with accents removed, so
     # folding the word the same way ignores capitals and accents.
@@ -52,6 +65,11 @@ def candidate_list(request):
             "q": q,
             "source": source,
             "source_choices": Candidate.Source.choices,
+            "show_archived": show_archived,
+            # So an empty list can say "archived candidates are hidden" instead of
+            # "no candidates yet". Passed uncalled: the template calls it only
+            # when the list is empty, so a normal page view skips the query.
+            "has_archived": Candidate.objects.filter(archived=True).exists,
         },
     )
 
@@ -89,6 +107,34 @@ def candidate_edit(request, pk):
         "hiring/candidate_form.html",
         {"form": form, "candidate": candidate, "saved_name": saved_name},
     )
+
+
+@require_POST
+def candidate_archive(request, pk):
+    candidate = get_object_or_404(Candidate, pk=pk)
+    if candidate.archived:
+        # A second click, or a stale tab: nothing to do.
+        messages.info(request, f"{candidate.full_name} is already archived.")
+        return redirect("hiring:candidate_detail", pk=candidate.pk)
+    try:
+        # archive() checks the rule on the server, whatever the page showed.
+        candidate.archive()
+    except ArchiveError as error:
+        messages.error(request, str(error))
+    else:
+        messages.success(request, f"{candidate.full_name} has been archived.")
+    return redirect("hiring:candidate_detail", pk=candidate.pk)
+
+
+@require_POST
+def candidate_restore(request, pk):
+    candidate = get_object_or_404(Candidate, pk=pk)
+    if not candidate.archived:
+        messages.info(request, f"{candidate.full_name} is already active.")
+    else:
+        candidate.restore()
+        messages.success(request, f"{candidate.full_name} has been restored.")
+    return redirect("hiring:candidate_detail", pk=candidate.pk)
 
 
 OPENING_STATUS_CHOICES = [("all", "All"), ("open", "Open"), ("closed", "Closed")]

@@ -6,13 +6,38 @@
   <div class="flex items-center justify-between mb-4">
     <div>
       <a href="{% url 'hiring:candidate_list' %}" class="link link-hover text-sm opacity-70">&larr; Candidates</a>
-      <h1 class="text-2xl font-bold">{{ candidate.full_name }}</h1>
+      <h1 class="text-2xl font-bold">
+        {{ candidate.full_name }}
+        {% if candidate.archived %}<span class="badge badge-ghost align-middle">Archived</span>{% endif %}
+      </h1>
     </div>
     <div class="flex gap-2">
-      <a href="{% url 'hiring:application_create' %}?candidate={{ candidate.pk }}" class="btn btn-primary">Add application</a>
+      {% if not candidate.archived %}
+        {# Archived candidates can't receive new applications until restored. #}
+        <a href="{% url 'hiring:application_create' %}?candidate={{ candidate.pk }}" class="btn btn-primary">Add application</a>
+      {% endif %}
+      {# Editing stays available while archived (a PRD decision). #}
       <a href="{% url 'hiring:candidate_edit' candidate.pk %}" class="btn">Edit</a>
+      {% if candidate.archived %}
+        <form method="post" action="{% url 'hiring:candidate_restore' candidate.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success">Restore</button>
+        </form>
+      {% else %}
+        {# Always offered: if they still have active applications, the server refuses and says why. #}
+        <form method="post" action="{% url 'hiring:candidate_archive' candidate.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-warning">Archive</button>
+        </form>
+      {% endif %}
     </div>
   </div>
+
+  {% if candidate.archived %}
+    <div role="alert" class="alert mb-4">
+      This candidate is archived: they're hidden from the candidate list and can't receive new applications. Restore them to change that.
+    </div>
+  {% endif %}
 
   <div class="grid gap-6 md:grid-cols-3">
     <div class="card bg-base-100 shadow md:col-span-2">

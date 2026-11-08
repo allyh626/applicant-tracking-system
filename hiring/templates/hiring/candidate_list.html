@@ -24,8 +24,12 @@
           {% endfor %}
         </select>
       </fieldset>
+      <label class="label cursor-pointer gap-2 h-10">
+        <input type="checkbox" name="archived" value="1" class="checkbox" {% if show_archived %}checked{% endif %}>
+        Show archived
+      </label>
       <button type="submit" class="btn">Filter</button>
-      {% if q or source %}
+      {% if q or source or show_archived %}
         <a href="{% url 'hiring:candidate_list' %}" class="btn btn-ghost">Clear</a>
       {% endif %}
     </div>
@@ -42,7 +46,10 @@
             <tbody>
               {% for candidate in candidates %}
                 <tr>
-                  <td><a class="link link-hover font-medium" href="{% url 'hiring:candidate_detail' candidate.pk %}">{{ candidate.full_name }}</a></td>
+                  <td>
+                    <a class="link link-hover font-medium" href="{% url 'hiring:candidate_detail' candidate.pk %}">{{ candidate.full_name }}</a>
+                    {% if candidate.archived %}<span class="badge badge-ghost badge-sm ml-1">Archived</span>{% endif %}
+                  </td>
                   <td>{{ candidate.email }}</td>
                   <td><span class="badge badge-outline">{{ candidate.get_source_display }}</span></td>
                   <td>{{ candidate.phone|default:"—" }}</td>
@@ -52,7 +59,12 @@
           </table>
         </div>
       {% elif q or source %}
-        <p class="opacity-70">No candidates match these filters.</p>
+        <p class="opacity-70">
+          No candidates match these filters.
+          {% if not show_archived and has_archived %}Archived candidates are hidden: tick "Show archived" to include them.{% endif %}
+        </p>
+      {% elif not show_archived and has_archived %}
+        <p class="opacity-70">No active candidates. Archived candidates are hidden: tick "Show archived" to see them.</p>
       {% else %}
         <p class="opacity-70">No candidates yet. Add the first one with the button above.</p>
       {% endif %}
