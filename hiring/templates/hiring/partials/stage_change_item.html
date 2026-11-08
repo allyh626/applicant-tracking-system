@@ -1,6 +1,10 @@
-{# One stage history entry. Context: change (a StageChange). #}
+{% comment %}
+One stage history entry. Context: change (a StageChange).
+Optional: hide_candidate (on a page that is already about one application)
+and exact_time (show the date and time, not only "3 days ago").
+{% endcomment %}
 <li class="py-2" id="stage-change-{{ change.pk }}">
-  <span class="font-medium">{{ change.application.candidate.full_name }}</span>:
+  {% if not hide_candidate %}<span class="font-medium">{{ change.application.candidate.full_name }}</span>:{% endif %}
   {{ change.get_from_stage_display }} &rarr; {{ change.get_to_stage_display }}
-  <div class="text-xs opacity-60" title="{{ change.changed_at|date:'M j, Y, g:i a' }}">by {{ change.changed_by.get_username }} &middot; {{ change.changed_at|timesince }} ago</div>
+  <div class="text-xs opacity-60" title="{{ change.changed_at|date:'M j, Y, g:i a' }}">by {{ change.changed_by.get_username }} &middot; {% if exact_time %}{{ change.changed_at|date:"M j, Y, g:i a" }} ({{ change.changed_at|timesince }} ago){% else %}{{ change.changed_at|timesince }} ago{% endif %}</div>
 </li>

@@ -10,7 +10,11 @@ change (the StageChange a successful move just wrote).
     <a class="link link-hover font-medium" href="{% url 'hiring:candidate_detail' application.candidate.pk %}">{{ application.candidate.full_name }}</a>
     <div class="text-sm opacity-60">{{ application.candidate.email }}</div>
   </td>
-  <td>{% include "hiring/partials/stage_badge.html" %}</td>
+  <td>
+    {% include "hiring/partials/stage_badge.html" %}
+    {# This application's full stage history. #}
+    <a href="{% url 'hiring:application_detail' application.pk %}" class="link link-hover text-xs opacity-70 block mt-1">History</a>
+  </td>
   <td class="text-sm opacity-70" title="{{ application.stage_changed_at|date:'M j, Y, g:i a' }}">{{ application.stage_changed_at|timesince }} ago</td>
   <td>
     {# The buttons inherit where the response goes from this wrapper: it replaces the whole row. #}

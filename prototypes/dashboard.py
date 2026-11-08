@@ -231,7 +231,7 @@ OPENING_ROW = """
   <td>
     <div class="flex gap-2 justify-end">
       <a class="btn btn-sm btn-primary btn-outline" href="#"
-         title="Pipeline page &mdash; see prototypes/stage_pipeline.py">Pipeline</a>
+         title="Pipeline page &mdash; see /openings/&lt;pk&gt;/pipeline/ in the real app">Pipeline</a>
       {% if o.is_open %}
         <button class="btn btn-sm btn-ghost"
                 hx-post="/openings/{{ o.id }}/toggle/" hx-target="closest tr" hx-swap="outerHTML"

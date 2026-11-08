@@ -40,7 +40,7 @@
               <li class="py-2 flex items-center justify-between gap-2">
                 <div>
                   <a class="link link-hover font-medium" href="{% url 'hiring:opening_detail' application.opening.pk %}">{{ application.opening.title }}</a>
-                  <p class="text-xs opacity-60">Created {{ application.created_at|date:"M j, Y" }}</p>
+                  <p class="text-xs opacity-60">Created {{ application.created_at|date:"M j, Y" }} &middot; <a class="link link-hover" href="{% url 'hiring:application_detail' application.pk %}">History</a></p>
                 </div>
                 {% include "hiring/partials/stage_badge.html" %}
               </li>

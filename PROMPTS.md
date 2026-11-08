@@ -28,6 +28,70 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-08 — Phase 8 built: pipeline stage filter and application history page
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase
+   8/openings/2/pipeline//implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 8` (pasted twice
+   with a stray URL in between; read as "implement phase 8")
+2. yes i agree with those behaviors for tdd
+3. yes the test looks right, go ahead
+4. yes, go ahead with the second behavior
+5. yes the test looks right, go ahead
+6. okay you can finish the phase
+7. what is the exact url i use to test #5?
+8. okay i have verified this phase in the broswer
+9. yes can you update prompts.md and then commit and push?
+
+### Summary
+- **Outcome:**
+  - Phase 8 is built. The pipeline page has a `?stage=` filter: a GET
+    form with a stage dropdown, Filter and Clear. An unknown value shows
+    every stage, like the other filters. A filter with no matches says
+    "No applications at this stage." A row moved out of the filtered stage
+    stays on screen until refresh, because the move only swaps that one
+    row.
+  - Added the application detail page at `/applications/<pk>/`: the
+    candidate, the opening (marked if closed), the current stage and
+    dates, and the full stage history oldest first, each entry with its
+    user and exact time. Pipeline rows and the candidate page's
+    applications list have a "History" link to it.
+  - The history entry template (`partials/stage_change_item.html`) now
+    takes `hide_candidate` and `exact_time` options, so the pipeline panel
+    and the detail page share one template.
+  - `prototypes/stage_pipeline.py` was deleted, and a tooltip in
+    `prototypes/dashboard.py` that pointed to it was updated.
+  - Two behaviors were built test-first: the stage filter, and the
+    history in time order with user and timestamp. 10 more tests cover the
+    dropdown, the empty filter, the moved row staying until refresh, links,
+    404 and login.
+  - 224 tests pass; ruff check and format are clean; no migrations were
+    needed. The user checked the phase in the browser, and all 5 Phase 8
+    criteria were ticked in the plan.
+- **Deviations:**
+  - No recommendations were overridden.
+  - The user asked for the exact URL for verification step 5 (an unknown
+    stage value): `http://127.0.0.1:8000/openings/2/pipeline/?stage=banana`.
+- **Sideways:**
+  - Cycle 2's first RED came from `str.index` raising `ValueError`, not an
+    assertion. An `assert ... in html` was added before it, so it failed
+    on an assertion as the TDD rules require, before the test was shown
+    for approval.
+  - The code review found five issues, and four were fixed: the moved-row
+    test sent a header and an extra request the endpoint ignores, so it was
+    rewritten to check the row-only swap target; a dropdown assertion
+    checked the whole page instead of the stage `<select>`; the history
+    entry markup was a copy of the existing partial; and the detail page
+    had two links to the same pipeline. The fifth, about LF line endings,
+    was a false alarm: the repo stores LF and `core.autocrlf` normalises
+    them, and the diff showed only the changed lines.
+  - A first dev-server smoke check failed because PowerShell 5.1's
+    `Invoke-WebRequest` can't report redirects; it was redone with curl.
+    Logged-out requests to the new pages redirected to login with `next`
+    kept.
+
 ## 2026-11-07 — Phase 7 built: pipeline page with HTMX stage moves
 
 ### Prompts

@@ -163,13 +163,34 @@ def application_create(request):
     return render(request, "hiring/application_form.html", {"form": form})
 
 
+def application_detail(request, pk):
+    application = get_object_or_404(
+        Application.objects.select_related("candidate", "opening"), pk=pk
+    )
+    # Oldest first: StageChange's default ordering is by time.
+    history = application.stage_changes.select_related("changed_by")
+    return render(
+        request,
+        "hiring/application_detail.html",
+        {"application": application, "history": history},
+    )
+
+
 RECENT_CHANGES_LIMIT = 20
 
 
 def opening_pipeline(request, pk):
-    """One opening's applications, each with buttons for the moves it allows."""
+    """One opening's applications, each with buttons for the moves it allows.
+
+    ?stage=<stage> shows only the applications at that stage.
+    """
     opening = get_object_or_404(JobOpening, pk=pk)
+    stage = request.GET.get("stage", "")
+    if stage not in Application.Stage.values:
+        stage = ""  # an unknown value (old bookmark, typo) means "all stages"
     applications = opening.applications.select_related("candidate")
+    if stage:
+        applications = applications.filter(stage=stage)
     recent_changes = (
         StageChange.objects.filter(application__opening=opening)
         .select_related("application__candidate", "changed_by")
@@ -178,7 +199,13 @@ def opening_pipeline(request, pk):
     return render(
         request,
         "hiring/pipeline.html",
-        {"opening": opening, "applications": applications, "recent_changes": recent_changes},
+        {
+            "opening": opening,
+            "applications": applications,
+            "recent_changes": recent_changes,
+            "stage": stage,
+            "stage_choices": Application.Stage.choices,
+        },
     )
 
 

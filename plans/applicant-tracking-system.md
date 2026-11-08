@@ -181,11 +181,11 @@ Add a `?stage=` filter to the pipeline page. After a move, a row stays visible e
 
 ### Acceptance criteria
 
-- [ ] `?stage=<stage>` shows only applications at that stage, and no filter shows all of them
-- [ ] A row moved out of the filtered stage stays on screen until refresh
-- [ ] The application detail page lists every `StageChange` in time order, with the user and timestamp
-- [ ] Pipeline rows and the candidate's application list link to the application detail page
-- [ ] `prototypes/stage_pipeline.py` is removed
+- [x] `?stage=<stage>` shows only applications at that stage, and no filter shows all of them
+- [x] A row moved out of the filtered stage stays on screen until refresh
+- [x] The application detail page lists every `StageChange` in time order, with the user and timestamp
+- [x] Pipeline rows and the candidate's application list link to the application detail page
+- [x] `prototypes/stage_pipeline.py` is removed
 
 ---
 

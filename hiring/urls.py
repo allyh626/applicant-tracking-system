@@ -19,5 +19,6 @@ urlpatterns = [
     path("openings/<int:pk>/reopen/", views.opening_reopen, name="opening_reopen"),
     path("openings/<int:pk>/pipeline/", views.opening_pipeline, name="opening_pipeline"),
     path("applications/new/", views.application_create, name="application_create"),
+    path("applications/<int:pk>/", views.application_detail, name="application_detail"),
     path("applications/<int:pk>/move/", views.application_move, name="application_move"),
 ]

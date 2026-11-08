@@ -21,6 +21,26 @@
   <div class="grid gap-6 lg:grid-cols-3">
     <div class="card bg-base-100 shadow lg:col-span-2">
       <div class="card-body">
+        {# A plain GET form: the filter lives in the URL, so a filtered view can be bookmarked. #}
+        <form method="get" action="{% url 'hiring:opening_pipeline' opening.pk %}" class="flex flex-wrap items-end gap-3 mb-2">
+          <fieldset class="fieldset">
+            <label class="fieldset-legend" for="stage">Stage</label>
+            <select id="stage" name="stage" class="select">
+              <option value="">All stages</option>
+              {% for value, label in stage_choices %}
+                <option value="{{ value }}" {% if value == stage %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </fieldset>
+          <button type="submit" class="btn">Filter</button>
+          {% if stage %}
+            <a href="{% url 'hiring:opening_pipeline' opening.pk %}" class="btn btn-ghost">Clear</a>
+          {% endif %}
+        </form>
+        {% if stage %}
+          {# Rows moved out of this stage stay put until the page is refreshed, so say so. #}
+          <p class="text-xs opacity-60 mb-2">Moved rows stay listed until you refresh the page.</p>
+        {% endif %}
         {% if applications %}
           <div class="overflow-x-auto">
             <table class="table">
@@ -34,6 +54,8 @@
               </tbody>
             </table>
           </div>
+        {% elif stage %}
+          <p class="opacity-70">No applications at this stage.</p>
         {% else %}
           <p class="opacity-70">No applications for this opening yet.</p>
         {% endif %}
