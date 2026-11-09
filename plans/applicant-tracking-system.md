@@ -218,11 +218,11 @@ Replace the placeholder home page with the read-only parts of the dashboard: ope
 
 ### Acceptance criteria
 
-- [ ] Every total matches the database for a known fixture set
-- [ ] The stage counts cover all eight stages in order, including zero counts, and final stages look different
-- [ ] The source counts include only active (non-archived) candidates
-- [ ] Recent stage changes are listed newest first, up to a fixed limit
-- [ ] The dashboard is the page users land on after logging in
+- [x] Every total matches the database for a known fixture set
+- [x] The stage counts cover all eight stages in order, including zero counts, and final stages look different
+- [x] The source counts include only active (non-archived) candidates
+- [x] Recent stage changes are listed newest first, up to a fixed limit
+- [x] The dashboard is the page users land on after logging in
 
 ---
 

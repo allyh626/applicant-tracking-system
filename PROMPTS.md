@@ -28,6 +28,66 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-08 — Phase 10 built: dashboard overview
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 10`
+2. i think those are good yes
+3. yes that test looks right, go ahead
+4. yes you can start the second behavior
+5. yes that test looks right, go ahead
+6. yes you can start the third behavior
+7. yes that test looks right, go ahead
+8. yes go ahead with the rest of the phase
+9. ok let me know when the review is done
+10. yes ive confirmed the stage in the browser, you can update prompts.md
+
+### Summary
+- **Outcome:**
+  - Phase 10 is built. The placeholder home page is now the read-only
+    dashboard:
+    - Four stat tiles: open openings out of the total, active
+      applications, Hired, and active candidates with the archived count.
+    - A box for each of the eight stages, in order and including zeros.
+      Hired, Rejected and Withdrawn are shaded and faded.
+    - A count of active (non-archived) candidates for each source, every
+      source shown even at zero.
+    - The 10 most recent stage changes, newest first, each with the
+      candidate, the opening, from → to, the user and how long ago.
+  - The history entry template (`partials/stage_change_item.html`) gained
+    a `show_opening` option for the dashboard, so the pipeline and detail
+    pages are unchanged.
+  - Three behaviors were built test-first: the totals for a known set of
+    data, the eight stage counts in order including zeros, and the source
+    counts leaving out archived candidates. Five more tests cover the
+    tiles on the page, the final-stage styling, the newest-first limit,
+    a recent change's contents and an empty database. Landing on the
+    dashboard after login was already tested in Phase 1.
+  - 267 tests pass; ruff check and format are clean; no migrations were
+    needed. The page makes 7 queries whatever the amount of data. The user
+    checked the phase in the browser, and all 5 Phase 10 criteria were
+    ticked in the plan. `prototypes/dashboard.py` stays until Phase 11, as
+    the plan says.
+- **Deviations:**
+  - No recommendations were overridden, and no questions were asked.
+  - The PRD gives no limit for recent changes, so 10 was chosen
+    (`DASHBOARD_RECENT_CHANGES_LIMIT`; the pipeline page shows 20).
+- **Sideways:**
+  - The first template draft made the candidate name in each history
+    entry a link. That would also have changed the pipeline page, outside
+    this phase, so it was reverted before any test ran.
+  - Ruff found an import-block blank line and a long test line; both were
+    fixed with `ruff check --fix` and `ruff format`.
+  - The code review found no bugs. Fixed: the active and Hired totals now
+    come from the per-stage counts (so they can't disagree with the stage
+    boxes), the opening and candidate totals use one query each (11
+    queries down to 7), the page test now checks all four tiles instead of
+    two, the "+ 0 archived" wording became "0 archived", and the partial's
+    comment notes that `hide_candidate` also hides `show_opening`. Kept on
+    purpose: the `stage`/`source` keys the tests read, so the tests don't
+    depend on display labels.
+
 ## 2026-11-08 — Phase 9 built: archive and restore candidates
 
 ### Prompts

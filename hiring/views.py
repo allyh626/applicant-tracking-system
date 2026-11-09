@@ -1,9 +1,11 @@
 from django.contrib import messages
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .forms import ApplicationForm, CandidateForm, JobOpeningForm, SkillForm
 from .models import (
+    FINAL_STAGES,
     Application,
     ArchiveError,
     Candidate,
@@ -14,10 +16,70 @@ from .models import (
 )
 from .search import fold
 
+DASHBOARD_RECENT_CHANGES_LIMIT = 10
+
 
 def dashboard(request):
-    """Home page after login. A placeholder until Phase 10 builds the real dashboard."""
-    return render(request, "hiring/dashboard.html")
+    """Home page after login: an overview of hiring."""
+    # One grouped query counts applications per stage. The stage tiles and the
+    # application totals both come from it, so they always agree.
+    # (order_by() clears the default ordering, which would split the groups.)
+    by_stage = {
+        row["stage"]: row["count"]
+        for row in Application.objects.order_by().values("stage").annotate(count=Count("pk"))
+    }
+    # One query per table for the opening and candidate totals.
+    openings = JobOpening.objects.aggregate(
+        total=Count("pk"), open=Count("pk", filter=Q(is_open=True))
+    )
+    candidates = Candidate.objects.aggregate(
+        active=Count("pk", filter=Q(archived=False)), archived=Count("pk", filter=Q(archived=True))
+    )
+    totals = {
+        "open_openings": openings["open"],
+        "total_openings": openings["total"],
+        # Active means not Hired, Rejected or Withdrawn, whatever the opening's status.
+        "active_applications": sum(
+            count for stage, count in by_stage.items() if stage not in FINAL_STAGES
+        ),
+        "hired": by_stage.get(Application.Stage.HIRED, 0),
+        "active_candidates": candidates["active"],
+        "archived_candidates": candidates["archived"],
+    }
+    stage_counts = [
+        {
+            "stage": stage,
+            "label": stage.label,
+            "count": by_stage.get(stage, 0),
+            "final": stage in FINAL_STAGES,
+        }
+        for stage in Application.Stage
+    ]
+    # Active (non-archived) candidates only, with every source shown even at 0.
+    by_source = {
+        row["source"]: row["count"]
+        for row in Candidate.objects.filter(archived=False)
+        .order_by()
+        .values("source")
+        .annotate(count=Count("pk"))
+    }
+    source_counts = [
+        {"source": source, "label": source.label, "count": by_source.get(source, 0)}
+        for source in Candidate.Source
+    ]
+    recent_changes = StageChange.objects.select_related(
+        "application__candidate", "application__opening", "changed_by"
+    ).order_by("-changed_at", "-pk")[:DASHBOARD_RECENT_CHANGES_LIMIT]
+    return render(
+        request,
+        "hiring/dashboard.html",
+        {
+            "totals": totals,
+            "stage_counts": stage_counts,
+            "source_counts": source_counts,
+            "recent_changes": recent_changes,
+        },
+    )
 
 
 def skill_list(request):

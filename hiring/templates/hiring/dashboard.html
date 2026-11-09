@@ -3,10 +3,80 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
-  <div class="card bg-base-100 shadow">
-    <div class="card-body">
-      <p>Welcome, {{ user.get_username }}. The hiring overview will appear here.</p>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+    <h1 class="text-2xl font-bold">Dashboard</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'hiring:candidate_create' %}" class="btn btn-sm btn-primary">New candidate</a>
+      <a href="{% url 'hiring:opening_create' %}" class="btn btn-sm">New opening</a>
+    </div>
+  </div>
+
+  <div class="space-y-6">
+    <div class="stats stats-vertical md:stats-horizontal shadow w-full bg-base-100">
+      <div id="open-openings-total" class="stat">
+        <div class="stat-title">Open openings</div>
+        <div class="stat-value text-primary">{{ totals.open_openings }}</div>
+        <div class="stat-desc">of {{ totals.total_openings }} total</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Active applications</div>
+        <div class="stat-value">{{ totals.active_applications }}</div>
+        <div class="stat-desc">not Hired, Rejected or Withdrawn</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Hired</div>
+        <div class="stat-value text-success">{{ totals.hired }}</div>
+        <div class="stat-desc">all time</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Active candidates</div>
+        <div class="stat-value">{{ totals.active_candidates }}</div>
+        <div class="stat-desc">{{ totals.archived_candidates }} archived</div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title text-base">Applications by stage</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          {% for row in stage_counts %}
+            {# Final stages are shaded and faded, so the active pipeline stands out. #}
+            <div class="rounded-box border border-base-300 p-3 text-center {% if row.final %}stage-final bg-base-200 opacity-60{% endif %}">
+              <div class="text-2xl font-bold">{{ row.count }}</div>
+              <div class="text-xs">{{ row.label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="text-xs opacity-60">Shaded boxes are final stages: Hired, Rejected and Withdrawn.</p>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="card bg-base-100 shadow h-fit">
+        <div class="card-body">
+          <h2 class="card-title text-base">Where candidates come from</h2>
+          {% for row in source_counts %}
+            <div>
+              <div class="flex justify-between text-sm"><span>{{ row.label }}</span><span class="opacity-70">{{ row.count }}</span></div>
+              <progress class="progress progress-primary w-full" value="{{ row.count }}" max="{{ totals.active_candidates|default:1 }}"></progress>
+            </div>
+          {% endfor %}
+          <p class="text-xs opacity-60">Active (non-archived) candidates only.</p>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow h-fit">
+        <div class="card-body">
+          <h2 class="card-title text-base">Recent stage changes</h2>
+          <ul class="text-sm divide-y divide-base-200">
+            {% for change in recent_changes %}
+              {% include "hiring/partials/stage_change_item.html" with show_opening=True %}
+            {% empty %}
+              <li class="py-2 opacity-70">No stage changes yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}
