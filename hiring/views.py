@@ -17,6 +17,15 @@ from .models import (
 from .search import fold
 
 DASHBOARD_RECENT_CHANGES_LIMIT = 10
+# The dashboard's openings filter, in tab order. Open comes first: it's the default.
+DASHBOARD_OPENING_STATUS_CHOICES = [("open", "Open"), ("closed", "Closed"), ("all", "All")]
+
+
+def opening_totals():
+    """Open openings and all openings, counted in one query."""
+    return JobOpening.objects.aggregate(
+        open_openings=Count("pk", filter=Q(is_open=True)), total_openings=Count("pk")
+    )
 
 
 def dashboard(request):
@@ -29,15 +38,11 @@ def dashboard(request):
         for row in Application.objects.order_by().values("stage").annotate(count=Count("pk"))
     }
     # One query per table for the opening and candidate totals.
-    openings = JobOpening.objects.aggregate(
-        total=Count("pk"), open=Count("pk", filter=Q(is_open=True))
-    )
     candidates = Candidate.objects.aggregate(
         active=Count("pk", filter=Q(archived=False)), archived=Count("pk", filter=Q(archived=True))
     )
     totals = {
-        "open_openings": openings["open"],
-        "total_openings": openings["total"],
+        **opening_totals(),
         # Active means not Hired, Rejected or Withdrawn, whatever the opening's status.
         "active_applications": sum(
             count for stage, count in by_stage.items() if stage not in FINAL_STAGES
@@ -70,6 +75,13 @@ def dashboard(request):
     recent_changes = StageChange.objects.select_related(
         "application__candidate", "application__opening", "changed_by"
     ).order_by("-changed_at", "-pk")[:DASHBOARD_RECENT_CHANGES_LIMIT]
+    # Unlike the Openings page, the dashboard shows open openings by default.
+    openings, opening_status = filter_openings_by_status(
+        request,
+        # prefetch_related loads every row's skills in one extra query.
+        with_active_counts(JobOpening.objects.prefetch_related("required_skills")),
+        DASHBOARD_OPENING_STATUS_CHOICES,
+    )
     return render(
         request,
         "hiring/dashboard.html",
@@ -78,6 +90,9 @@ def dashboard(request):
             "stage_counts": stage_counts,
             "source_counts": source_counts,
             "recent_changes": recent_changes,
+            "openings": openings,
+            "opening_status": opening_status,
+            "opening_status_choices": DASHBOARD_OPENING_STATUS_CHOICES,
         },
     )
 
@@ -199,19 +214,43 @@ def candidate_restore(request, pk):
     return redirect("hiring:candidate_detail", pk=candidate.pk)
 
 
+# The Openings page's filter. All comes first: it's the default there.
 OPENING_STATUS_CHOICES = [("all", "All"), ("open", "Open"), ("closed", "Closed")]
+
+
+def with_active_counts(openings):
+    """Add `active_count` to each opening: its applications that aren't final."""
+    # One query for the whole list: the filter keeps Hired, Rejected and
+    # Withdrawn applications out of the count.
+    # Counting groups the rows, and Django drops the model's default ordering
+    # from grouped queries, so the ordering is put back here.
+    return openings.annotate(
+        active_count=Count("applications", filter=~Q(applications__stage__in=FINAL_STAGES))
+    ).order_by(*JobOpening._meta.ordering)
+
+
+def filter_openings_by_status(request, openings, choices):
+    """Apply ?status=open|closed|all to `openings`. Returns (openings, status).
+
+    `choices` is the page's filter list. Its first value is the default, which
+    is also used for an unknown value (old bookmark, typo).
+    """
+    default = choices[0][0]
+    status = request.GET.get("status", default)
+    if status not in dict(choices):
+        status = default
+    if status != "all":
+        openings = openings.filter(is_open=(status == "open"))
+    return openings, status
 
 
 def opening_list(request):
     """List openings, filtered by ?status=open|closed|all (default all)."""
-    status = request.GET.get("status", "all")
-    if status not in dict(OPENING_STATUS_CHOICES):
-        status = "all"  # an unknown value (old bookmark, typo) means "all"
     # prefetch_related loads every opening's skills in one extra query, instead
     # of one query per row.
-    openings = JobOpening.objects.prefetch_related("required_skills")
-    if status != "all":
-        openings = openings.filter(is_open=(status == "open"))
+    openings, status = filter_openings_by_status(
+        request, JobOpening.objects.prefetch_related("required_skills"), OPENING_STATUS_CHOICES
+    )
     return render(
         request,
         "hiring/opening_list.html",
@@ -235,10 +274,24 @@ def opening_detail(request, pk):
 
 def _set_opening_status(request, pk, is_open):
     """Flip only the open/closed flag. Applications under the opening are untouched."""
-    opening = get_object_or_404(JobOpening, pk=pk)
+    is_htmx = bool(request.headers.get("HX-Request"))
+    openings = JobOpening.objects.all()
+    if is_htmx:
+        # The dashboard row needs the active count and skills, so load them
+        # with the opening. Flipping the flag doesn't change either.
+        openings = with_active_counts(openings.prefetch_related("required_skills"))
+    opening = get_object_or_404(openings, pk=pk)
     opening.is_open = is_open
     # update_fields saves just this flag (and the updated time), nothing else.
     opening.save(update_fields=["is_open", "updated_at"])
+    if is_htmx:
+        # From the dashboard: send back only this opening's re-rendered row,
+        # plus the open-openings total out-of-band (see the row template).
+        return render(
+            request,
+            "hiring/partials/dashboard_opening_row.html",
+            {"opening": opening, "totals": opening_totals(), "oob": True},
+        )
     return redirect("hiring:opening_detail", pk=opening.pk)
 
 

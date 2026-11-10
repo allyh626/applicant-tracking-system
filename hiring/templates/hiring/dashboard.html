@@ -13,11 +13,7 @@
 
   <div class="space-y-6">
     <div class="stats stats-vertical md:stats-horizontal shadow w-full bg-base-100">
-      <div id="open-openings-total" class="stat">
-        <div class="stat-title">Open openings</div>
-        <div class="stat-value text-primary">{{ totals.open_openings }}</div>
-        <div class="stat-desc">of {{ totals.total_openings }} total</div>
-      </div>
+      {% include "hiring/partials/open_openings_total.html" %}
       <div class="stat">
         <div class="stat-title">Active applications</div>
         <div class="stat-value">{{ totals.active_applications }}</div>
@@ -51,30 +47,65 @@
       </div>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-      <div class="card bg-base-100 shadow h-fit">
+    <div class="grid gap-6 lg:grid-cols-3">
+      <div class="card bg-base-100 shadow h-fit lg:col-span-2">
         <div class="card-body">
-          <h2 class="card-title text-base">Where candidates come from</h2>
-          {% for row in source_counts %}
-            <div>
-              <div class="flex justify-between text-sm"><span>{{ row.label }}</span><span class="opacity-70">{{ row.count }}</span></div>
-              <progress class="progress progress-primary w-full" value="{{ row.count }}" max="{{ totals.active_candidates|default:1 }}"></progress>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="card-title text-base">Job openings</h2>
+            {# Plain links: the filter lives in the URL, so a filtered view can be bookmarked. #}
+            <div role="tablist" class="tabs tabs-box tabs-sm">
+              {% for value, label in opening_status_choices %}
+                <a role="tab" href="?status={{ value }}" class="tab {% if value == opening_status %}tab-active{% endif %}">{{ label }}</a>
+              {% endfor %}
             </div>
-          {% endfor %}
-          <p class="text-xs opacity-60">Active (non-archived) candidates only.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr><th>Opening</th><th>Required skills</th><th class="text-center">Active applications</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                {% for opening in openings %}
+                  {% include "hiring/partials/dashboard_opening_row.html" %}
+                {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-center opacity-70">
+                      {% if opening_status == "all" %}No job openings yet.{% else %}No {{ opening_status }} job openings.{% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-xs opacity-60">A closed or reopened opening stays in the list until you reload the page.</p>
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow h-fit">
-        <div class="card-body">
-          <h2 class="card-title text-base">Recent stage changes</h2>
-          <ul class="text-sm divide-y divide-base-200">
-            {% for change in recent_changes %}
-              {% include "hiring/partials/stage_change_item.html" with show_opening=True %}
-            {% empty %}
-              <li class="py-2 opacity-70">No stage changes yet.</li>
+      <div class="space-y-6">
+        <div class="card bg-base-100 shadow">
+          <div class="card-body">
+            <h2 class="card-title text-base">Where candidates come from</h2>
+            {% for row in source_counts %}
+              <div>
+                <div class="flex justify-between text-sm"><span>{{ row.label }}</span><span class="opacity-70">{{ row.count }}</span></div>
+                <progress class="progress progress-primary w-full" value="{{ row.count }}" max="{{ totals.active_candidates|default:1 }}"></progress>
+              </div>
             {% endfor %}
-          </ul>
+            <p class="text-xs opacity-60">Active (non-archived) candidates only.</p>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow">
+          <div class="card-body">
+            <h2 class="card-title text-base">Recent stage changes</h2>
+            <ul class="text-sm divide-y divide-base-200">
+              {% for change in recent_changes %}
+                {% include "hiring/partials/stage_change_item.html" with show_opening=True %}
+              {% empty %}
+                <li class="py-2 opacity-70">No stage changes yet.</li>
+              {% endfor %}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

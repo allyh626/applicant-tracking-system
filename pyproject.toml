@@ -20,8 +20,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-# prototypes/ are throwaway references (imports must follow django.setup()).
-extend-exclude = ["*/migrations/*", "prototypes"]
+extend-exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "DJ", "RUF"]

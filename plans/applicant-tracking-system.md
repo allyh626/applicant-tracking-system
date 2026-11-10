@@ -236,9 +236,9 @@ Add the openings list to the dashboard, showing department, location, required s
 
 ### Acceptance criteria
 
-- [ ] The openings list defaults to Open, and `?status=closed|all` works
-- [ ] Each row shows its active-application count and links to `/openings/<pk>/pipeline/`
-- [ ] For an HTMX request, closing or reopening returns the row fragment plus an out-of-band open-openings total
-- [ ] The same close and reopen endpoints still redirect normally for non-HTMX requests (Phase 5 behaviour is unchanged)
-- [ ] Closing from the dashboard still asks for confirmation, and reopening doesn't
-- [ ] `prototypes/dashboard.py` is removed
+- [x] The openings list defaults to Open, and `?status=closed|all` works
+- [x] Each row shows its active-application count and links to `/openings/<pk>/pipeline/`
+- [x] For an HTMX request, closing or reopening returns the row fragment plus an out-of-band open-openings total
+- [x] The same close and reopen endpoints still redirect normally for non-HTMX requests (Phase 5 behaviour is unchanged)
+- [x] Closing from the dashboard still asks for confirmation, and reopening doesn't
+- [x] `prototypes/dashboard.py` is removed

@@ -28,6 +28,77 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-10 — Phase 11 built: dashboard openings list with HTMX close/reopen
+
+### Prompts
+1. `/implement @prd/applicant-tracking-system.md
+   @plans/applicant-tracking-system.md implement phase 11`
+2. yes, those three look good
+3. yes you can make it pass
+4. yes you can do the third now
+5. yes you can make it pass
+6. yes you can
+7. yes you can make it pass
+8. yes you can move onto the rest of the phase
+9. yes you can remove those mentions of the prototype
+10. okay ive checked all the acceptance criteria in the plan, and they all
+    pass youc an check akk the boxes
+11. update prompts.md and commit and push for me
+
+### Summary
+- **Outcome:**
+  - Phase 11 is built, which finishes the plan. The dashboard has a "Job
+    openings" list:
+    - Each row shows the title, department, location, required skills,
+      active-application count and Open/Closed status, with a Pipeline
+      link.
+    - Open/Closed/All tabs set `?status=`, defaulting to Open. The
+      Openings page still defaults to All.
+    - Close (with a browser confirm saying existing applications continue
+      as normal) and Reopen (no confirm) post with HTMX to the existing
+      close/reopen endpoints.
+  - For an HTMX request those endpoints return only the re-rendered row
+    plus the "Open openings" tile out-of-band. Other requests still
+    redirect to the detail page, as in Phase 5.
+  - New partials: `dashboard_opening_row.html` and
+    `open_openings_total.html`. The page and the HTMX response use the
+    same templates and helpers (`with_active_counts`, `opening_totals`),
+    so they can't disagree.
+  - The Openings page's status filter became a shared helper,
+    `filter_openings_by_status`, that takes each page's own choice list.
+    The first choice is the default.
+  - Three behaviors were built test-first: the Open default and status
+    filter, each opening's active count, and the HTMX row plus
+    out-of-band total. Three more tests cover the pipeline link, the
+    confirm on Close only, and the empty-filter message.
+  - `prototypes/dashboard.py` was deleted. That was the last prototype,
+    so the prototype mentions in `CLAUDE.md` and the Ruff exclude in
+    `pyproject.toml` were removed too.
+  - 278 tests pass; ruff check and format are clean. Every acceptance
+    criterion in the plan is ticked.
+- **Deviations:**
+  - None. Every TDD test and step was approved as proposed.
+  - Removing the prototype mentions was my suggestion, and the user
+    agreed.
+- **Sideways:**
+  - Adding the active count made Django drop the model's alphabetical
+    ordering, because grouped queries skip `Meta.ordering`. The new filter
+    test caught it, and the helper now re-applies the model's ordering.
+  - My first confirm-button test had two muddled assertions. I replaced
+    them with exact URL checks before moving on.
+  - Ruff flagged one test line as too long; it was split.
+  - Code review raised 8 points. Two were fixed: the filter now checks the
+    dashboard's own choices, and close/reopen no longer loads the opening
+    twice. Four were left as they are: the PRD rule that a row stays until
+    refresh, pagination being out of scope, the redirect already being
+    tested in Phase 5, and HTMX callers that only future phases might add.
+  - Follow-up, not fixed: an expired session or a server error during an
+    HTMX click shows nothing clear. The Phase 7 pipeline buttons have the
+    same gap, so both should be fixed together.
+  - No browser tool was available in this session. The user checked the
+    HTMX swap and the confirm box in the browser before the last box was
+    ticked.
+
 ## 2026-11-08 — Phase 10 built: dashboard overview
 
 ### Prompts

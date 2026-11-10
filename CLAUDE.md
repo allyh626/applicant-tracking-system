@@ -9,10 +9,6 @@ An internal applicant tracking system built with Django (single `hiring` app).
   decision is in the 2026-11-02 entries of `PROMPTS.md`.
 - **Plan:** `plans/applicant-tracking-system.md` breaks the work into phases.
   Build one phase at a time.
-- **Prototypes:** `prototypes/` holds throwaway single-file Django apps
-  (in-memory data, no login) used as a reference for the stage logic, HTMX
-  patterns and DaisyUI layout. Delete each one in the same commit as the real
-  feature that replaces it (the plan says which phase).
 
 ## Working with this user
 
@@ -37,7 +33,6 @@ An internal applicant tracking system built with Django (single `hiring` app).
   uv and Python 3.14 are installed.
 - Inline `python -c "..."` passed through PowerShell breaks on quotes. Write a
   script file to the scratchpad and run it instead.
-- Prototypes run with `uv run prototypes/<file>.py`. Use
-  `uv run --with django` for ad-hoc scripts.
+- Use `uv run --with django` for ad-hoc scripts.
 - `uvx ruff check` flags `# noqa: E402` as unused (RUF100), so don't add those
   comments.

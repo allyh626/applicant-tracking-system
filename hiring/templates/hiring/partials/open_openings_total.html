@@ -1,0 +1,12 @@
+{% comment %}
+The dashboard's "Open openings" tile. Closing or reopening from the dashboard
+sends it back with oob=True, and HTMX swaps it in by its id, so the count
+updates along with the row.
+
+Context: totals (open_openings, total_openings), and optionally oob.
+{% endcomment %}
+<div id="open-openings-total" class="stat" {% if oob %}hx-swap-oob="true"{% endif %}>
+  <div class="stat-title">Open openings</div>
+  <div class="stat-value text-primary">{{ totals.open_openings }}</div>
+  <div class="stat-desc">of {{ totals.total_openings }} total</div>
+</div>

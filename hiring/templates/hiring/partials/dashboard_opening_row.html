@@ -1,0 +1,46 @@
+{% comment %}
+One opening's row in the dashboard's openings list. Close and Reopen post to
+the normal close/reopen endpoints with HTMX; for an HTMX request they send back
+this row re-rendered, which replaces the old one (hx-target="closest tr"), plus
+the open-openings total out-of-band.
+
+Context: opening (with active_count, see with_active_counts in views.py),
+totals, and optionally oob (true in the HTMX response).
+{% endcomment %}
+<tr id="opening-{{ opening.pk }}">
+  <td>
+    <a class="link link-hover font-medium" href="{% url 'hiring:opening_detail' opening.pk %}">{{ opening.title }}</a>
+    <div class="text-sm opacity-60">{{ opening.department }} &middot; {{ opening.location }}</div>
+  </td>
+  <td>
+    <div class="flex flex-wrap gap-1">
+      {% for skill in opening.required_skills.all %}
+        <span class="badge badge-outline badge-sm">{{ skill.name }}</span>
+      {% empty %}
+        <span class="opacity-60">&mdash;</span>
+      {% endfor %}
+    </div>
+  </td>
+  <td class="text-center">{{ opening.active_count }}</td>
+  <td>{% if opening.is_open %}<span class="badge badge-success">Open</span>{% else %}<span class="badge badge-ghost">Closed</span>{% endif %}</td>
+  <td>
+    <div class="flex gap-2 justify-end" hx-target="closest tr" hx-swap="outerHTML">
+      <a class="btn btn-sm btn-secondary btn-outline" href="{% url 'hiring:opening_pipeline' opening.pk %}">Pipeline</a>
+      {% if opening.is_open %}
+        {# Closing asks first (the browser's confirm box); reopening doesn't. #}
+        <button type="button" class="btn btn-sm btn-warning btn-outline"
+                hx-post="{% url 'hiring:opening_close' opening.pk %}"
+                hx-confirm="Close {{ opening.title }}? It will stop accepting new applications. Existing applications ({{ opening.active_count }} active) will continue as normal.">Close</button>
+      {% else %}
+        <button type="button" class="btn btn-sm btn-success btn-outline"
+                hx-post="{% url 'hiring:opening_reopen' opening.pk %}">Reopen</button>
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% if oob %}
+  {# <template> keeps the browser from dropping the tile, since a <tr> can't sit next to other elements. #}
+  <template>
+    {% include "hiring/partials/open_openings_total.html" %}
+  </template>
+{% endif %}
