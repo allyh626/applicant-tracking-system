@@ -41,5 +41,40 @@
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
+
+  {% comment %}
+  When a button's HTMX request fails (a server error, a page that no longer
+  exists, an expired security token, or no connection), HTMX leaves the page as
+  it was and shows nothing. This box says so instead, on every page.
+  {% endcomment %}
+  <div id="htmx-error" class="toast toast-end z-50" hidden>
+    <div role="alert" class="alert alert-error">
+      <span id="htmx-error-message"></span>
+      <button type="button" class="btn btn-sm btn-ghost" onclick="this.closest('#htmx-error').hidden = true">Dismiss</button>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var box = document.getElementById("htmx-error");
+      var message = document.getElementById("htmx-error-message");
+      function show(text) {
+        message.textContent = text;
+        box.hidden = false;
+      }
+      // The server answered with an error, e.g. 403, 404 or 500.
+      document.addEventListener("htmx:responseError", function (event) {
+        show("That didn't work (error " + event.detail.xhr.status + "). " +
+             "Reload the page to see the latest state, then try again.");
+      });
+      // The request never reached the server, e.g. no connection or the server is down.
+      document.addEventListener("htmx:sendError", function () {
+        show("Couldn't reach the server. Check your connection, then try again.");
+      });
+      // A later request that works clears an old message.
+      document.addEventListener("htmx:afterRequest", function (event) {
+        if (event.detail.successful) box.hidden = true;
+      });
+    })();
+  </script>
 </body>
 </html>

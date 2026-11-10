@@ -28,6 +28,67 @@ Each entry has this shape:
     - **Deviations:** recommendations overridden, follow-up questions asked
     - **Sideways:** failures, wrong turns, and how they were caught
 
+## 2026-11-10 — Follow-up: ended sessions and failed requests on HTMX buttons
+
+### Prompts
+1. oh yes if you could fix that I forgot about that gap
+2. i am trying to check #2, when i log out i go directly to the login page,
+   i know this is what i wanted to happen in the app but dont underrstand
+   what youre asking me to check in step two
+3. okay, is there a message displayed when someones session times out? i
+   dont remember seeing one, if there isn't could you display a message
+   saying why they were logged out?
+4. (Answer to "When should the message appear?") Session ended
+   (Recommended)
+5. update prompts.md and commit and push for me
+
+### Summary
+- **Outcome:**
+  - Fixed the gap from the Phase 11 code review, for both the dashboard's
+    Close/Reopen and the pipeline's stage buttons:
+    - **Logged-out HTMX click:** `HtmxLoginRedirectMiddleware` turns the
+      redirect to login into an `HX-Redirect`, so the whole login page
+      loads, not a copy squeezed into the table row. `?next=` is the page
+      the user was on (from `HX-Current-URL`), not the button's POST-only
+      URL.
+    - **Failed HTMX request:** `base.html` has a hidden error box. It shows
+      the error code for 4xx/5xx responses, or "Couldn't reach the server"
+      when there's no connection. It has a Dismiss button and clears on
+      the next request that works.
+  - Added a "Your session ended, so you were logged out" message on the
+    login page (`SessionEndedMessageMiddleware`):
+    - A `was_logged_in` cookie is set while logged in, and Log out removes
+      it.
+    - A request with the cookie but no login means the session ended
+      without Log out, so the redirect to login carries the message, once.
+      This covers links, refreshes and HTMX buttons.
+  - Found along the way: no session timeout is configured, so Django's
+    default keeps people logged in for 2 weeks. That was left unchanged.
+  - 11 new tests in `test_htmx_errors.py` and `test_session_ended.py`. 289
+    tests pass; ruff check and format are clean.
+- **Deviations:**
+  - The user asked a follow-up question about the manual test: logging out
+    in the same tab goes straight to login. I explained the two-tab setup
+    (log out in Tab B, click in the stale Tab A).
+  - Asked one question: when the message should appear. The user picked
+    the recommended option, "session ended" (marker cookie). The other
+    options were "button clicks only" and "any login redirect" with a
+    generic message.
+- **Sideways:**
+  - Two expected login URLs in my first tests were wrong: Django leaves
+    `/` unescaped in `?next=`. I fixed the test expectations; the code was
+    right.
+  - The session-ended tests caught a real bug: the HTMX redirect built a
+    new response and dropped the cookies carrying the message. It now
+    keeps them.
+  - Django's test client keeps a deleted cookie with an empty value, which
+    made a logout look like an ended session. The middleware now checks
+    for a value, not just the cookie's name.
+  - Choosing the marker cookie means logging out in another tab no longer
+    shows the message, on purpose. The manual check therefore deletes the
+    `sessionid` cookie in developer tools. The user didn't report that
+    browser check before asking to commit.
+
 ## 2026-11-10 — Phase 11 built: dashboard openings list with HTMX close/reopen
 
 ### Prompts

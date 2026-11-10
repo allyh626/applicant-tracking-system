@@ -49,7 +49,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # Every view requires login unless it is marked @login_not_required.
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
+    # A logged-out HTMX click loads the login page instead of swapping it into the row.
+    "config.middleware.HtmxLoginRedirectMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    # Says "your session ended" on the login page. After MessageMiddleware, so
+    # the message it adds is saved for the next page.
+    "config.middleware.SessionEndedMessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Turns the blank 405 page (a GET to a POST-only URL) into a readable one.
     "config.middleware.FriendlyMethodNotAllowedMiddleware",
